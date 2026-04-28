@@ -7,7 +7,7 @@
 새로운 프로젝트에서 다음을 실행하세요:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/company/r2_wf/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/bluemirr5/r2_wf/main/install.sh | bash
 ```
 
 ## 설치되는 것
@@ -46,7 +46,7 @@ curl -fsSL https://raw.githubusercontent.com/company/r2_wf/main/install.sh | bas
 
 ```bash
 rm -rf .claude
-curl -fsSL https://raw.githubusercontent.com/company/r2_wf/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/bluemirr5/r2_wf/main/install.sh | bash
 ```
 
 ## 버전 히스토리
