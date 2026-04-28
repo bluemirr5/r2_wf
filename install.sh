@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-REPO_URL="https://github.com/company/r2_wf"
+REPO_URL="https://github.com/bluemirr5/r2_wf"
 TEMP_DIR=$(mktemp -d)
 
 echo "📦 Installing r2_wf Claude Lab template..."
