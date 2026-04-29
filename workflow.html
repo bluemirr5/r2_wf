@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>r2_wf — Claude Lab 에이전트 워크플로우</title>
+<style>
+  :root{
+    --bg:#0f172a;
+    --panel:#111827;
+    --card:#1e293b;
+    --card-2:#0b1220;
+    --border:#334155;
+    --text:#e2e8f0;
+    --muted:#94a3b8;
+    --primary:#60a5fa;
+    --accent:#a78bfa;
+    --ok:#34d399;
+    --warn:#fbbf24;
+    --danger:#f87171;
+    --opus:#a78bfa;
+    --sonnet:#60a5fa;
+    --haiku:#34d399;
+    --shadow:0 6px 18px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif;line-height:1.55}
+  a{color:var(--primary)}
+  .container{max-width:1200px;margin:0 auto;padding:32px 24px 80px}
+  header.hero{padding:24px;border-radius:14px;background:linear-gradient(135deg,#1e293b,#0b1220);border:1px solid var(--border);box-shadow:var(--shadow)}
+  header.hero h1{margin:0 0 8px;font-size:28px;letter-spacing:-.01em}
+  header.hero p{margin:0;color:var(--muted)}
+  .meta{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--card-2)}
+  .badge.opus{color:var(--opus);border-color:#3b2f63}
+  .badge.sonnet{color:var(--sonnet);border-color:#22426d}
+  .badge.haiku{color:var(--haiku);border-color:#1f5f4a}
+  .badge.tool{color:var(--muted)}
+  h2.section{margin:48px 0 16px;font-size:20px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+  h2.section .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:var(--card);border:1px solid var(--border);font-size:13px;color:var(--primary)}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;color:var(--muted);font-size:13px}
+  .legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+  .dot.opus{background:var(--opus)}.dot.sonnet{background:var(--sonnet)}.dot.haiku{background:var(--haiku)}
+
+  /* SVG flow */
+  .flow-wrap{overflow-x:auto;margin-top:14px;border:1px solid var(--border);border-radius:12px;background:var(--card-2);padding:8px}
+  svg.flow{width:100%;height:auto;min-width:1100px;display:block}
+  .node rect{rx:10;ry:10;stroke-width:1.5}
+  .node text.title{font-weight:700;font-size:13px;fill:var(--text)}
+  .node text.role{font-size:11px;fill:var(--muted)}
+  .node.opus rect{fill:#1e1b3a;stroke:var(--opus)}
+  .node.sonnet rect{fill:#0f223a;stroke:var(--sonnet)}
+  .node.haiku rect{fill:#0e2b22;stroke:var(--haiku)}
+  .node.gate rect{fill:#3a1f1f;stroke:var(--warn)}
+  .node.gate text.title{fill:var(--warn)}
+  .edge{stroke:#475569;stroke-width:1.5;fill:none}
+  .edge.dashed{stroke-dasharray:5 4}
+  .edge.fail{stroke:var(--danger)}
+  .edge.loop{stroke:var(--accent)}
+  .edge-label{fill:var(--muted);font-size:11px}
+  .arrow{fill:#475569}
+  .arrow.fail{fill:var(--danger)}
+  .arrow.loop{fill:var(--accent)}
+
+  /* Cards */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .agent{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
+  .agent::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary)}
+  .agent.opus::before{background:var(--opus)}
+  .agent.sonnet::before{background:var(--sonnet)}
+  .agent.haiku::before{background:var(--haiku)}
+  .agent h3{margin:0;font-size:16px;letter-spacing:-.01em;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .agent .role{color:var(--muted);font-size:13px;margin:0}
+  .agent .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px}
+  .agent .tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--card-2);border:1px solid var(--border);color:var(--muted)}
+  .agent .when{font-size:12px;color:var(--muted);background:var(--card-2);border:1px dashed var(--border);border-radius:8px;padding:8px}
+  .agent .when strong{color:var(--text)}
+
+  /* Phases */
+  .phases{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+  .phase{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+  .phase h4{margin:0 0 6px;font-size:14px;color:var(--primary)}
+  .phase ol{margin:6px 0 0 18px;padding:0;color:var(--muted);font-size:13px}
+  .phase ol li{margin:3px 0}
+  .phase .gate{margin-top:8px;font-size:12px;color:var(--warn)}
+
+  table.matrix{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+  table.matrix th, table.matrix td{border:1px solid var(--border);padding:10px;text-align:left;vertical-align:top}
+  table.matrix th{background:var(--card-2);color:var(--muted);font-weight:600}
+  table.matrix tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+  code{background:#0b1220;border:1px solid var(--border);padding:1px 6px;border-radius:6px;font-size:12px;color:#e2e8f0}
+
+  .callout{margin-top:14px;padding:12px 14px;border-radius:10px;background:#1f2a44;border-left:4px solid var(--primary);color:var(--text);font-size:13px}
+  .callout.warn{background:#3a2c12;border-left-color:var(--warn)}
+  .callout.ok{background:#143229;border-left-color:var(--ok)}
+  footer{color:var(--muted);font-size:12px;margin-top:36px;text-align:center}
+
+  @media (max-width: 980px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .phases{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width: 620px){
+    .grid{grid-template-columns:1fr}
+    .phases{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="hero">
+  <h1>r2_wf — Claude Lab 에이전트 워크플로우</h1>
+  <p>9개의 전문 에이전트가 <strong>플랜 → 스펙 → 구현 → 검증 → 문서</strong>의 사이클을 굴립니다. 각자 권한 경계가 명확하고, 실패/이슈는 다음 단계로 떠넘기지 않습니다.</p>
+  <div class="meta">
+    <span class="badge">에이전트 9개</span>
+    <span class="badge opus">opus 5</span>
+    <span class="badge sonnet">sonnet 3</span>
+    <span class="badge haiku">haiku 1</span>
+    <span class="badge tool">.claude/agents/*.md</span>
+  </div>
+</header>
+
+<h2 class="section"><span class="num">1</span>전체 워크플로우</h2>
+<div class="panel">
+  <div class="legend">
+    <span><span class="dot opus"></span>opus (전략·심층 분석)</span>
+    <span><span class="dot sonnet"></span>sonnet (구현·검증)</span>
+    <span><span class="dot haiku"></span>haiku (정형 작업)</span>
+    <span style="margin-left:auto">▶ 정상 흐름 &nbsp; ⤳ 분기/실패 &nbsp; ⟲ 주기적 호출</span>
+  </div>
+
+  <div class="flow-wrap">
+    <svg class="flow" viewBox="0 0 1200 560" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="arrow"/>
+        </marker>
+        <marker id="arrFail" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="arrow fail"/>
+        </marker>
+        <marker id="arrLoop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="arrow loop"/>
+        </marker>
+      </defs>
+
+      <!-- Row 1: planner -> spec-writer -> architect -->
+      <g class="node opus" transform="translate(40,40)">
+        <rect width="180" height="64"/>
+        <text class="title" x="14" y="26">① planner</text>
+        <text class="role" x="14" y="46">마스터 플랜 + 자체검증</text>
+      </g>
+      <g class="node opus" transform="translate(290,40)">
+        <rect width="180" height="64"/>
+        <text class="title" x="14" y="26">② spec-writer</text>
+        <text class="role" x="14" y="46">사이클별 상세 스펙</text>
+      </g>
+      <g class="node opus" transform="translate(540,40)">
+        <rect width="200" height="64"/>
+        <text class="title" x="14" y="26">③ architect (모드1)</text>
+        <text class="role" x="14" y="46">스펙 리뷰 / 정합성 검증</text>
+      </g>
+
+      <!-- Gate after architect -->
+      <g class="node gate" transform="translate(800,40)">
+        <rect width="170" height="64"/>
+        <text class="title" x="14" y="26">🛑 차단 이슈?</text>
+        <text class="role" x="14" y="46">있으면 spec-writer로 회귀</text>
+      </g>
+
+      <!-- Row 2: TDD branch / 사후 branch -->
+      <g class="node sonnet" transform="translate(40,180)">
+        <rect width="200" height="64"/>
+        <text class="title" x="14" y="26">④a test-writer (TDD)</text>
+        <text class="role" x="14" y="46">스펙→테스트 선작성</text>
+      </g>
+      <g class="node sonnet" transform="translate(290,180)">
+        <rect width="180" height="64"/>
+        <text class="title" x="14" y="26">⑤ developer</text>
+        <text class="role" x="14" y="46">실제 구현 (Edit/Write)</text>
+      </g>
+      <g class="node opus" transform="translate(540,180)">
+        <rect width="200" height="64"/>
+        <text class="title" x="14" y="26">③' architect (모드2)</text>
+        <text class="role" x="14" y="46">구조 결정 가이드 (요청 시)</text>
+      </g>
+      <g class="node sonnet" transform="translate(800,180)">
+        <rect width="200" height="64"/>
+        <text class="title" x="14" y="26">④b test-writer (사후)</text>
+        <text class="role" x="14" y="46">구현→테스트 후작성</text>
+      </g>
+
+      <!-- Row 3: debugger gate / code-reviewer / security-checker -->
+      <g class="node opus" transform="translate(40,320)">
+        <rect width="200" height="64"/>
+        <text class="title" x="14" y="26">⑥ debugger</text>
+        <text class="role" x="14" y="46">실패 원인 분석 + 승인 후 수정</text>
+      </g>
+      <g class="node sonnet" transform="translate(290,320)">
+        <rect width="200" height="64"/>
+        <text class="title" x="14" y="26">⑦ code-reviewer</text>
+        <text class="role" x="14" y="46">로직·가독성·영향도 리뷰</text>
+      </g>
+      <g class="node opus" transform="translate(540,320)">
+        <rect width="200" height="64"/>
+        <text class="title" x="14" y="26">⑧ security-checker</text>
+        <text class="role" x="14" y="46">OWASP 심층 검사 (보고만)</text>
+      </g>
+      <g class="node haiku" transform="translate(800,320)">
+        <rect width="200" height="64"/>
+        <text class="title" x="14" y="26">⑨ doc-writer</text>
+        <text class="role" x="14" y="46">N 사이클마다 drift 점검</text>
+      </g>
+
+      <!-- Row 4: cycle loop -->
+      <g class="node gate" transform="translate(290,460)">
+        <rect width="200" height="64"/>
+        <text class="title" x="14" y="26">🔁 다음 사이클</text>
+        <text class="role" x="14" y="46">spec-writer로 복귀</text>
+      </g>
+
+      <!-- Edges row 1 -->
+      <path class="edge" d="M220,72 L290,72" marker-end="url(#arr)"/>
+      <path class="edge" d="M470,72 L540,72" marker-end="url(#arr)"/>
+      <path class="edge" d="M740,72 L800,72" marker-end="url(#arr)"/>
+
+      <!-- Gate -> back to spec-writer (fail / blocking) -->
+      <path class="edge fail dashed" d="M885,40 C 885,10 380,0 380,40" marker-end="url(#arrFail)"/>
+      <text class="edge-label" x="560" y="14">차단 이슈 → spec 재작성</text>
+
+      <!-- Architect OK -> developer (TDD branch) -->
+      <path class="edge" d="M885,104 L885,150 L380,150 L380,180" marker-end="url(#arr)"/>
+      <text class="edge-label" x="610" y="146">✅ 진행 가능</text>
+
+      <!-- TDD: test-writer -> developer -->
+      <path class="edge" d="M240,212 L290,212" marker-end="url(#arr)"/>
+      <text class="edge-label" x="245" y="206">테스트 우선</text>
+
+      <!-- developer <-> architect (mode2) -->
+      <path class="edge dashed loop" d="M470,212 L540,212" marker-end="url(#arrLoop)"/>
+      <path class="edge dashed loop" d="M540,232 L470,232" marker-end="url(#arrLoop)"/>
+      <text class="edge-label" x="478" y="252">구조 결정 질의</text>
+
+      <!-- developer -> test-writer 사후 -->
+      <path class="edge" d="M470,196 L800,196" marker-end="url(#arr)"/>
+      <text class="edge-label" x="600" y="190">사후 모드: 구현 후 테스트</text>
+
+      <!-- developer / test-writer fail -> debugger -->
+      <path class="edge fail" d="M380,244 L380,290 L140,290 L140,320" marker-end="url(#arrFail)"/>
+      <text class="edge-label" x="160" y="282">빌드/타입/테스트 실패</text>
+      <path class="edge fail" d="M900,244 L900,290 L140,290" />
+
+      <!-- debugger 승인 -> developer -->
+      <path class="edge dashed" d="M140,320 L140,260 L290,260" marker-end="url(#arr)"/>
+      <text class="edge-label" x="50" y="276">승인 후 수정</text>
+
+      <!-- developer -> code-reviewer -->
+      <path class="edge" d="M380,244 L380,320" marker-end="url(#arr)"/>
+      <text class="edge-label" x="386" y="290">변경 직후</text>
+
+      <!-- code-reviewer -> security-checker -->
+      <path class="edge" d="M490,352 L540,352" marker-end="url(#arr)"/>
+
+      <!-- security-checker -> doc-writer -->
+      <path class="edge dashed" d="M740,352 L800,352" marker-end="url(#arr)"/>
+      <text class="edge-label" x="745" y="346">N 사이클마다</text>
+
+      <!-- doc-writer -> next cycle / loop back to spec-writer -->
+      <path class="edge loop" d="M900,384 L900,440 L490,492 L490,492" />
+      <path class="edge loop" d="M900,440 L490,440 L490,460" marker-end="url(#arrLoop)"/>
+      <text class="edge-label" x="600" y="434">사이클 종료 → 다음 스펙</text>
+
+      <!-- code-reviewer back to developer (이슈 시) -->
+      <path class="edge fail dashed" d="M390,320 L390,300 L380,300 L380,244" marker-end="url(#arrFail)"/>
+      <text class="edge-label" x="396" y="308">Critical 발견 시</text>
+
+      <!-- next cycle -> spec-writer -->
+      <path class="edge loop" d="M390,460 L390,120 L380,120 L380,104" marker-end="url(#arrLoop)"/>
+      <text class="edge-label" x="252" y="124">반복</text>
+    </svg>
+  </div>
+
+  <div class="callout">
+    <strong>핵심 규칙</strong> · planner는 코드 안 씀 / spec-writer·architect·security-checker·code-reviewer는 <em>제안만</em> / developer만 코드 작성·수정 / debugger는 <strong>승인 후</strong>에만 Edit / doc-writer는 <code>*.md</code>만 수정.
+  </div>
+</div>
+
+<h2 class="section"><span class="num">2</span>4단계 페이즈로 본 흐름</h2>
+<div class="phases">
+  <div class="phase">
+    <h4>Phase A · 계획</h4>
+    <ol>
+      <li><code>planner</code> 마스터 플랜 작성</li>
+      <li>CEO/CTO 자체 검증 통과</li>
+      <li>사이클 분할 확정</li>
+    </ol>
+    <div class="gate">게이트 ▸ 플랜 승인</div>
+  </div>
+  <div class="phase">
+    <h4>Phase B · 명세</h4>
+    <ol>
+      <li><code>spec-writer</code> 사이클 스펙</li>
+      <li><code>architect</code> 모드1 리뷰</li>
+      <li>차단 이슈 해소</li>
+    </ol>
+    <div class="gate">게이트 ▸ ✅ 진행 가능</div>
+  </div>
+  <div class="phase">
+    <h4>Phase C · 구현</h4>
+    <ol>
+      <li>모드 결정 (TDD / 사후)</li>
+      <li><code>test-writer</code> ↔ <code>developer</code></li>
+      <li>실패 시 <code>debugger</code></li>
+      <li>구조 의문 시 <code>architect</code> 모드2</li>
+    </ol>
+    <div class="gate">게이트 ▸ 빌드/타입/테스트 그린</div>
+  </div>
+  <div class="phase">
+    <h4>Phase D · 검증·문서</h4>
+    <ol>
+      <li><code>code-reviewer</code></li>
+      <li><code>security-checker</code></li>
+      <li>N 사이클마다 <code>doc-writer</code></li>
+    </ol>
+    <div class="gate">게이트 ▸ Critical 0건</div>
+  </div>
+</div>
+
+<h2 class="section"><span class="num">3</span>에이전트 카드</h2>
+<div class="grid">
+
+  <div class="agent opus">
+    <h3>① planner <span class="badge opus">opus</span></h3>
+    <p class="role">시니어 프로덕트·기술 리더. <strong>왜 이 순서·이 범위로</strong> 가는지 답하는 마스터 플랜을 작성하고 스스로 CEO/CTO 두 관점으로 검증합니다.</p>
+    <div class="when"><strong>호출 시점</strong> · 프로젝트 시작 또는 큰 방향 전환. spec-writer 선행 조건.</div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Glob</span><span class="tag">Write</span><span class="tag">docs/plan/master-plan.md</span></div>
+  </div>
+
+  <div class="agent opus">
+    <h3>② spec-writer <span class="badge opus">opus</span></h3>
+    <p class="role">읽자마자 구현 착수 가능한 수준의 <strong>구현 지시서</strong>. 모호함을 elicitation으로 제거하고 AC를 Given/When/Then으로 적습니다.</p>
+    <div class="when"><strong>호출 시점</strong> · 사이클별 구현 직전. 플랜 승인 후.</div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Glob</span><span class="tag">Write</span><span class="tag">docs/specs/*.md</span></div>
+  </div>
+
+  <div class="agent opus">
+    <h3>③ architect <span class="badge opus">opus</span></h3>
+    <p class="role">두 가지 모드. <strong>모드1</strong>: 스펙이 마스터 플랜과 일치하는지 검증. <strong>모드2</strong>: 구현 중 구조 결정에 가이드. 코드는 안 씀.</p>
+    <div class="when"><strong>호출 시점</strong> · spec-writer 직후 / developer가 막혔을 때.</div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Glob</span><span class="tag">no-edit</span></div>
+  </div>
+
+  <div class="agent sonnet">
+    <h3>④ test-writer <span class="badge sonnet">sonnet</span></h3>
+    <p class="role">의미 있는 테스트만. 실패 시 <strong>assert 느슨화 금지</strong>, 프로덕션 버그/테스트 오류/환경 문제로 분류 보고.</p>
+    <div class="when"><strong>호출 시점</strong> · TDD 모드 선행 / 사후 모드 후행.</div>
+    <div class="tags"><span class="tag">Vitest/Jest</span><span class="tag">Bash</span><span class="tag">no-edit</span></div>
+  </div>
+
+  <div class="agent sonnet">
+    <h3>⑤ developer <span class="badge sonnet">sonnet</span></h3>
+    <p class="role">실제 코드를 쓰는 유일한 에이전트. 스펙 외 영역 임의 변경 금지, 빌드/타입체크 통과까지 책임.</p>
+    <div class="when"><strong>호출 시점</strong> · architect ✅ 진행 가능 이후.</div>
+    <div class="tags"><span class="tag">Edit</span><span class="tag">Write</span><span class="tag">Bash</span><span class="tag">tsc/build</span></div>
+  </div>
+
+  <div class="agent opus">
+    <h3>⑥ debugger <span class="badge opus">opus</span></h3>
+    <p class="role">실패 로그를 <strong>증상이 아닌 원인까지</strong> 추적. 수정안 제시 → 사용자 승인 → Edit. 승인 전 수정 금지.</p>
+    <div class="when"><strong>호출 시점</strong> · 빌드/타입/테스트/런타임 실패 직후.</div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Bash</span><span class="tag">Edit (승인 후)</span></div>
+  </div>
+
+  <div class="agent sonnet">
+    <h3>⑦ code-reviewer <span class="badge sonnet">sonnet</span></h3>
+    <p class="role">정확성·영향도·에러처리·보안·성능·테스트 7개 관점. <strong>Before/After</strong>를 항상 함께 제시. 스타일 트집 금지.</p>
+    <div class="when"><strong>호출 시점</strong> · 코드 작성/수정 직후.</div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Bash</span><span class="tag">no-edit</span></div>
+  </div>
+
+  <div class="agent opus">
+    <h3>⑧ security-checker <span class="badge opus">opus</span></h3>
+    <p class="role">OWASP Top 10 + 풀스택 특화. 시크릿 스캔·의존성 audit. <strong>수정 코드는 제시 안 함</strong> — 방향만, 키 로테이션 등 후속 조치까지 안내.</p>
+    <div class="when"><strong>호출 시점</strong> · code-reviewer 이후 또는 보안 민감 변경.</div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Bash</span><span class="tag">audit</span></div>
+  </div>
+
+  <div class="agent haiku">
+    <h3>⑨ doc-writer <span class="badge haiku">haiku</span></h3>
+    <p class="role">마스터 플랜·스펙과 코드 사이의 <strong>drift</strong>를 점검·갱신. 코드 파일은 절대 수정 안 함.</p>
+    <div class="when"><strong>호출 시점</strong> · N 사이클마다 또는 큰 변경 후. 매 사이클 ❌.</div>
+    <div class="tags"><span class="tag">Edit (md)</span><span class="tag">Write</span><span class="tag">git diff</span></div>
+  </div>
+
+</div>
+
+<h2 class="section"><span class="num">4</span>권한·산출물 매트릭스</h2>
+<div class="panel">
+<table class="matrix">
+  <thead>
+    <tr>
+      <th>에이전트</th><th>모델</th><th>편집 권한</th><th>주 산출물</th><th>입력</th><th>출력 위치</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>planner</td><td>opus</td><td>md만</td><td>마스터 플랜</td><td>목표·제약·기존 코드</td><td><code>docs/plan/master-plan.md</code></td></tr>
+    <tr><td>spec-writer</td><td>opus</td><td>md만</td><td>사이클 스펙</td><td>플랜의 사이클 정의</td><td><code>docs/specs/*.md</code></td></tr>
+    <tr><td>architect</td><td>opus</td><td>없음</td><td>리뷰 보고서 / 구조 가이드</td><td>스펙 + 플랜 + 코드</td><td>대화창</td></tr>
+    <tr><td>test-writer</td><td>sonnet</td><td>없음 (테스트 코드는 출력)</td><td>테스트 코드 + 실행 결과</td><td><code>git diff HEAD</code></td><td>테스트 파일 / 실행 로그</td></tr>
+    <tr><td>developer</td><td>sonnet</td><td>코드·md 모두</td><td>구현 코드 + 빌드 통과</td><td>스펙 + 기존 코드</td><td>소스 트리</td></tr>
+    <tr><td>debugger</td><td>opus</td><td>승인 후 코드 Edit</td><td>원인 분석 + 수정안</td><td>실패 로그</td><td>대화창 / 승인 후 코드</td></tr>
+    <tr><td>code-reviewer</td><td>sonnet</td><td>없음</td><td>Critical/Warn/Suggest 보고</td><td><code>git diff HEAD</code></td><td>대화창</td></tr>
+    <tr><td>security-checker</td><td>opus</td><td>없음</td><td>OWASP 심층 보고</td><td>diff + audit</td><td>대화창</td></tr>
+    <tr><td>doc-writer</td><td>haiku</td><td>md만</td><td>drift 갱신 + 인수인계</td><td>플랜 + 스펙 + 코드</td><td><code>docs/**/*.md</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 class="section"><span class="num">5</span>분기 시나리오</h2>
+<div class="panel">
+  <div class="callout warn">
+    <strong>🛑 architect 모드1에서 차단 이슈</strong> · spec-writer로 회귀하여 스펙 갱신. developer는 호출되지 않음.
+  </div>
+  <div class="callout warn">
+    <strong>⚠️ developer가 빌드/타입체크 실패</strong> · 원인이 자명하면 직접 수정. 불명이면 debugger 호출. debugger는 분석 → <em>승인 요청</em> → 적용.
+  </div>
+  <div class="callout warn">
+    <strong>⚠️ test-writer 실패</strong> · 프로덕션 버그(a) / 테스트 오류(b) / 환경 문제(c)로 분류. (a)면 테스트 수정 금지, developer로 회귀.
+  </div>
+  <div class="callout warn">
+    <strong>🔄 developer 구현 중 구조 결정 막힘</strong> · architect 모드2 호출. 두 안이 비등하면 <strong>단순한 쪽</strong>을 권고.
+  </div>
+  <div class="callout">
+    <strong>📚 N 사이클 누적</strong> · doc-writer가 마스터 플랜·스펙과 코드의 drift를 분류(A/B/C/D)하고, A만 직접 갱신. B/C는 사용자 보고.
+  </div>
+  <div class="callout ok">
+    <strong>✅ 사이클 종료</strong> · code-reviewer Critical 0건 + security-checker Critical 0건 + 테스트 그린. 다음 spec-writer 호출로 사이클 반복.
+  </div>
+</div>
+
+<h2 class="section"><span class="num">6</span>호출 순서 요약 (체크리스트)</h2>
+<div class="panel">
+  <ol style="margin:0 0 0 18px;color:var(--text)">
+    <li><strong>planner</strong> → <code>docs/plan/master-plan.md</code> 작성·승인</li>
+    <li><strong>spec-writer</strong> → 사이클 스펙 작성</li>
+    <li><strong>architect (모드1)</strong> → 스펙 리뷰. 차단 이슈 해소까지 ②↔③ 반복</li>
+    <li>모드 결정: <strong>TDD</strong>면 ④ test-writer 선행 / <strong>사후</strong>면 ⑤ developer 선행</li>
+    <li><strong>developer</strong> 구현 (필요 시 ③' architect 모드2 / ⑥ debugger 협업)</li>
+    <li>사후 모드라면 <strong>test-writer</strong> 후행, TDD라면 그린 확인</li>
+    <li><strong>code-reviewer</strong> → 변경사항 리뷰</li>
+    <li><strong>security-checker</strong> → OWASP 심층 검사</li>
+    <li>N 사이클마다 <strong>doc-writer</strong> → drift 점검 + 인수인계</li>
+    <li>다음 사이클을 위해 ②로 복귀</li>
+  </ol>
+</div>
+
+<footer>
+  원본: <code>.claude/agents/*.md</code> &middot; 생성 기준일 2026-04-29 &middot; r2_wf v1.0
+</footer>
+
+</div>
+</body>
+</html>
