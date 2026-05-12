@@ -111,13 +111,14 @@
 
 <header class="hero">
   <h1>r2_wf — Claude Lab 에이전트 워크플로우</h1>
-  <p>9개의 전문 에이전트가 <strong>플랜 → 스펙 → 구현 → 검증 → 문서</strong>의 사이클을 굴립니다. 각자 권한 경계가 명확하고, 실패/이슈는 다음 단계로 떠넘기지 않습니다.</p>
+  <p>9개의 전문 에이전트가 <strong>플랜 → 스펙 → 구현 → 검증 → 문서</strong>의 사이클을 굴립니다. 각자 권한 경계가 명확하고, 실패/이슈는 다음 단계로 떠넘기지 않습니다. <strong>모든 호출의 시작·종료에 <code>docs/PROCESS.md</code></strong>를 동기화하여 작업판을 공유합니다.</p>
   <div class="meta">
     <span class="badge">에이전트 9개</span>
     <span class="badge opus">opus 5</span>
     <span class="badge sonnet">sonnet 3</span>
     <span class="badge haiku">haiku 1</span>
     <span class="badge tool">.claude/agents/*.md</span>
+    <span class="badge" style="color:#fbbf24;border-color:#5a3f12">📋 docs/PROCESS.md</span>
   </div>
 </header>
 
@@ -283,9 +284,69 @@
   <div class="callout">
     <strong>핵심 규칙</strong> · planner는 코드 안 씀 / spec-writer·architect·security-checker·code-reviewer는 <em>제안만</em> / developer만 코드 작성·수정 / debugger는 <strong>승인 후</strong>에만 Edit / doc-writer는 <code>*.md</code>만 수정.
   </div>
+  <div class="callout warn">
+    <strong>📋 PROCESS.md 동기화 (모든 에이전트 공통)</strong> · 매 호출 <strong>시작 시</strong> <code>docs/PROCESS.md</code>를 Read하여 진행 중·대기·메모를 컨텍스트로 흡수. <strong>종료 시</strong> 완료 항목 삭제 + 남은 작업·블로커 한 줄 갱신. 100줄 초과 금지. read-only 에이전트도 <em>이 파일에 한해</em> Edit/Write 가능.
+  </div>
 </div>
 
-<h2 class="section"><span class="num">2</span>4단계 페이즈로 본 흐름</h2>
+<h2 class="section"><span class="num">2</span>📋 PROCESS.md — 공유 작업판</h2>
+<div class="panel">
+  <p style="margin:0 0 12px;color:var(--muted)">
+    9개 에이전트가 사이클 진행 상태를 공유하는 단일 파일 <code>docs/PROCESS.md</code>.
+    매 호출 <strong>시작·종료</strong>에 동기화되어, 다음 작업자가 이 파일 하나로 현재 위치를 파악할 수 있습니다.
+    완료된 일은 즉시 삭제, 살아있는 작업·블로커·메모만 남깁니다.
+  </p>
+  <div class="phases">
+    <div class="phase">
+      <h4>시작 시</h4>
+      <ol>
+        <li><code>docs/PROCESS.md</code> Read</li>
+        <li>진행 중·대기·메모 흡수</li>
+        <li>파일 부재 시 planner 선행 필요</li>
+      </ol>
+      <div class="gate">게이트 ▸ 컨텍스트 확보</div>
+    </div>
+    <div class="phase">
+      <h4>종료 시</h4>
+      <ol>
+        <li>완료 항목 <strong>삭제</strong> (이력 X)</li>
+        <li>남은 작업·블로커 한 줄</li>
+        <li>한 줄 메모 (결정·주의)</li>
+      </ol>
+      <div class="gate">게이트 ▸ 다음 에이전트가 이어받음</div>
+    </div>
+    <div class="phase">
+      <h4>경량 유지</h4>
+      <ol>
+        <li>100줄 초과 금지</li>
+        <li>에세이·이력화·장문 금지</li>
+        <li>길어지면 spec/플랜으로 이관</li>
+      </ol>
+      <div class="gate">게이트 ▸ doc-writer 정리</div>
+    </div>
+    <div class="phase">
+      <h4>표준 포맷</h4>
+      <ol>
+        <li><strong>진행 중</strong> · 상태/블로커</li>
+        <li><strong>다음</strong> · 한 줄 요약</li>
+        <li><strong>메모</strong> · 한 줄 결정</li>
+      </ol>
+      <div class="gate">게이트 ▸ planner가 owner</div>
+    </div>
+  </div>
+
+  <div class="callout ok">
+    <strong>역할 분담</strong> · <code>planner</code> = 초기 생성 + 표준 포맷 owner / <code>doc-writer</code> = 비대화 정리 1차 책임자 / 나머지 7개 에이전트 = 자기 호출 직전·직후 동기화만.
+  </div>
+  <div class="callout warn">
+    <strong>🔒 security-checker 예외</strong> · 시크릿·취약점 상세는 PROCESS.md에 절대 기록 금지. "이슈 N건 발견, 본 채팅 보고서 참조" 정도만 한 줄로.
+  </div>
+  <div class="callout">
+    <strong>🛠 도구 권한 변경 요약</strong> · read-only였던 <code>architect</code>·<code>test-writer</code>·<code>code-reviewer</code>·<code>security-checker</code>에 <code>Edit</code>/<code>Write</code> 추가 — <em>오직 PROCESS.md 갱신용</em>. 다른 파일 수정은 여전히 금지.
+  </div>
+</div>
+
+<h2 class="section"><span class="num">3</span>4단계 페이즈로 본 흐름</h2>
 <div class="phases">
   <div class="phase">
     <h4>Phase A · 계획</h4>
@@ -326,75 +387,75 @@
   </div>
 </div>
 
-<h2 class="section"><span class="num">3</span>에이전트 카드</h2>
+<h2 class="section"><span class="num">4</span>에이전트 카드</h2>
 <div class="grid">
 
   <div class="agent opus">
     <h3>① planner <span class="badge opus">opus</span></h3>
     <p class="role">시니어 프로덕트·기술 리더. <strong>왜 이 순서·이 범위로</strong> 가는지 답하는 마스터 플랜을 작성하고 스스로 CEO/CTO 두 관점으로 검증합니다.</p>
-    <div class="when"><strong>호출 시점</strong> · 프로젝트 시작 또는 큰 방향 전환. spec-writer 선행 조건.</div>
-    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Glob</span><span class="tag">Write</span><span class="tag">docs/plan/master-plan.md</span></div>
+    <div class="when"><strong>호출 시점</strong> · 프로젝트 시작 또는 큰 방향 전환. spec-writer 선행 조건. <strong>PROCESS.md 표준 포맷 owner.</strong></div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Glob</span><span class="tag">Edit</span><span class="tag">Write</span><span class="tag">docs/plan/master-plan.md</span><span class="tag">📋 PROCESS.md</span></div>
   </div>
 
   <div class="agent opus">
     <h3>② spec-writer <span class="badge opus">opus</span></h3>
     <p class="role">읽자마자 구현 착수 가능한 수준의 <strong>구현 지시서</strong>. 모호함을 elicitation으로 제거하고 AC를 Given/When/Then으로 적습니다.</p>
     <div class="when"><strong>호출 시점</strong> · 사이클별 구현 직전. 플랜 승인 후.</div>
-    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Glob</span><span class="tag">Write</span><span class="tag">docs/specs/*.md</span></div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Glob</span><span class="tag">Edit</span><span class="tag">Write</span><span class="tag">docs/specs/*.md</span><span class="tag">📋 PROCESS.md</span></div>
   </div>
 
   <div class="agent opus">
     <h3>③ architect <span class="badge opus">opus</span></h3>
     <p class="role">두 가지 모드. <strong>모드1</strong>: 스펙이 마스터 플랜과 일치하는지 검증. <strong>모드2</strong>: 구현 중 구조 결정에 가이드. 코드는 안 씀.</p>
     <div class="when"><strong>호출 시점</strong> · spec-writer 직후 / developer가 막혔을 때.</div>
-    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Glob</span><span class="tag">no-edit</span></div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Glob</span><span class="tag">Edit/Write (PROCESS.md만)</span><span class="tag">📋 PROCESS.md</span></div>
   </div>
 
   <div class="agent sonnet">
     <h3>④ test-writer <span class="badge sonnet">sonnet</span></h3>
     <p class="role">의미 있는 테스트만. 실패 시 <strong>assert 느슨화 금지</strong>, 프로덕션 버그/테스트 오류/환경 문제로 분류 보고.</p>
     <div class="when"><strong>호출 시점</strong> · TDD 모드 선행 / 사후 모드 후행.</div>
-    <div class="tags"><span class="tag">Vitest/Jest</span><span class="tag">Bash</span><span class="tag">no-edit</span></div>
+    <div class="tags"><span class="tag">Vitest/Jest</span><span class="tag">Bash</span><span class="tag">Edit/Write (테스트+PROCESS.md)</span><span class="tag">📋 PROCESS.md</span></div>
   </div>
 
   <div class="agent sonnet">
     <h3>⑤ developer <span class="badge sonnet">sonnet</span></h3>
     <p class="role">실제 코드를 쓰는 유일한 에이전트. 스펙 외 영역 임의 변경 금지, 빌드/타입체크 통과까지 책임.</p>
     <div class="when"><strong>호출 시점</strong> · architect ✅ 진행 가능 이후.</div>
-    <div class="tags"><span class="tag">Edit</span><span class="tag">Write</span><span class="tag">Bash</span><span class="tag">tsc/build</span></div>
+    <div class="tags"><span class="tag">Edit</span><span class="tag">Write</span><span class="tag">Bash</span><span class="tag">tsc/build</span><span class="tag">📋 PROCESS.md</span></div>
   </div>
 
   <div class="agent opus">
     <h3>⑥ debugger <span class="badge opus">opus</span></h3>
     <p class="role">실패 로그를 <strong>증상이 아닌 원인까지</strong> 추적. 수정안 제시 → 사용자 승인 → Edit. 승인 전 수정 금지.</p>
     <div class="when"><strong>호출 시점</strong> · 빌드/타입/테스트/런타임 실패 직후.</div>
-    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Bash</span><span class="tag">Edit (승인 후)</span></div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Bash</span><span class="tag">Edit (승인 후)</span><span class="tag">Write (PROCESS.md만)</span><span class="tag">📋 PROCESS.md</span></div>
   </div>
 
   <div class="agent sonnet">
     <h3>⑦ code-reviewer <span class="badge sonnet">sonnet</span></h3>
     <p class="role">정확성·영향도·에러처리·보안·성능·테스트 7개 관점. <strong>Before/After</strong>를 항상 함께 제시. 스타일 트집 금지.</p>
     <div class="when"><strong>호출 시점</strong> · 코드 작성/수정 직후.</div>
-    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Bash</span><span class="tag">no-edit</span></div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Bash</span><span class="tag">Edit/Write (PROCESS.md만)</span><span class="tag">📋 PROCESS.md</span></div>
   </div>
 
   <div class="agent opus">
     <h3>⑧ security-checker <span class="badge opus">opus</span></h3>
     <p class="role">OWASP Top 10 + 풀스택 특화. 시크릿 스캔·의존성 audit. <strong>수정 코드는 제시 안 함</strong> — 방향만, 키 로테이션 등 후속 조치까지 안내.</p>
-    <div class="when"><strong>호출 시점</strong> · code-reviewer 이후 또는 보안 민감 변경.</div>
-    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Bash</span><span class="tag">audit</span></div>
+    <div class="when"><strong>호출 시점</strong> · code-reviewer 이후 또는 보안 민감 변경. <strong>시크릿/취약점 상세는 PROCESS.md 기록 금지.</strong></div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Bash</span><span class="tag">audit</span><span class="tag">Edit/Write (PROCESS.md만)</span><span class="tag">📋 PROCESS.md</span></div>
   </div>
 
   <div class="agent haiku">
     <h3>⑨ doc-writer <span class="badge haiku">haiku</span></h3>
-    <p class="role">마스터 플랜·스펙과 코드 사이의 <strong>drift</strong>를 점검·갱신. 코드 파일은 절대 수정 안 함.</p>
+    <p class="role">마스터 플랜·스펙과 코드 사이의 <strong>drift</strong>를 점검·갱신. 코드 파일은 절대 수정 안 함. <strong>PROCESS.md 비대화 정리 1차 책임자.</strong></p>
     <div class="when"><strong>호출 시점</strong> · N 사이클마다 또는 큰 변경 후. 매 사이클 ❌.</div>
-    <div class="tags"><span class="tag">Edit (md)</span><span class="tag">Write</span><span class="tag">git diff</span></div>
+    <div class="tags"><span class="tag">Edit (md)</span><span class="tag">Write</span><span class="tag">git diff</span><span class="tag">📋 PROCESS.md 정리 owner</span></div>
   </div>
 
 </div>
 
-<h2 class="section"><span class="num">4</span>권한·산출물 매트릭스</h2>
+<h2 class="section"><span class="num">5</span>권한·산출물 매트릭스</h2>
 <div class="panel">
 <table class="matrix">
   <thead>
@@ -403,20 +464,20 @@
     </tr>
   </thead>
   <tbody>
-    <tr><td>planner</td><td>opus</td><td>md만</td><td>마스터 플랜</td><td>목표·제약·기존 코드</td><td><code>docs/plan/master-plan.md</code></td></tr>
-    <tr><td>spec-writer</td><td>opus</td><td>md만</td><td>사이클 스펙</td><td>플랜의 사이클 정의</td><td><code>docs/specs/*.md</code></td></tr>
-    <tr><td>architect</td><td>opus</td><td>없음</td><td>리뷰 보고서 / 구조 가이드</td><td>스펙 + 플랜 + 코드</td><td>대화창</td></tr>
-    <tr><td>test-writer</td><td>sonnet</td><td>없음 (테스트 코드는 출력)</td><td>테스트 코드 + 실행 결과</td><td><code>git diff HEAD</code></td><td>테스트 파일 / 실행 로그</td></tr>
-    <tr><td>developer</td><td>sonnet</td><td>코드·md 모두</td><td>구현 코드 + 빌드 통과</td><td>스펙 + 기존 코드</td><td>소스 트리</td></tr>
-    <tr><td>debugger</td><td>opus</td><td>승인 후 코드 Edit</td><td>원인 분석 + 수정안</td><td>실패 로그</td><td>대화창 / 승인 후 코드</td></tr>
-    <tr><td>code-reviewer</td><td>sonnet</td><td>없음</td><td>Critical/Warn/Suggest 보고</td><td><code>git diff HEAD</code></td><td>대화창</td></tr>
-    <tr><td>security-checker</td><td>opus</td><td>없음</td><td>OWASP 심층 보고</td><td>diff + audit</td><td>대화창</td></tr>
-    <tr><td>doc-writer</td><td>haiku</td><td>md만</td><td>drift 갱신 + 인수인계</td><td>플랜 + 스펙 + 코드</td><td><code>docs/**/*.md</code></td></tr>
+    <tr><td>planner</td><td>opus</td><td>md (+ PROCESS.md)</td><td>마스터 플랜 + PROCESS.md 초기화</td><td>목표·제약·기존 코드</td><td><code>docs/plan/master-plan.md</code></td></tr>
+    <tr><td>spec-writer</td><td>opus</td><td>md (+ PROCESS.md)</td><td>사이클 스펙</td><td>플랜의 사이클 정의 + PROCESS.md</td><td><code>docs/specs/*.md</code></td></tr>
+    <tr><td>architect</td><td>opus</td><td>PROCESS.md만</td><td>리뷰 보고서 / 구조 가이드</td><td>스펙 + 플랜 + 코드 + PROCESS.md</td><td>대화창</td></tr>
+    <tr><td>test-writer</td><td>sonnet</td><td>테스트 + PROCESS.md</td><td>테스트 코드 + 실행 결과</td><td><code>git diff HEAD</code> + PROCESS.md</td><td>테스트 파일 / 실행 로그</td></tr>
+    <tr><td>developer</td><td>sonnet</td><td>코드·md 전체</td><td>구현 코드 + 빌드 통과</td><td>스펙 + 기존 코드 + PROCESS.md</td><td>소스 트리</td></tr>
+    <tr><td>debugger</td><td>opus</td><td>승인 후 코드 + PROCESS.md</td><td>원인 분석 + 수정안</td><td>실패 로그 + PROCESS.md</td><td>대화창 / 승인 후 코드</td></tr>
+    <tr><td>code-reviewer</td><td>sonnet</td><td>PROCESS.md만</td><td>Critical/Warn/Suggest 보고</td><td><code>git diff HEAD</code> + PROCESS.md</td><td>대화창</td></tr>
+    <tr><td>security-checker</td><td>opus</td><td>PROCESS.md만 (요약만)</td><td>OWASP 심층 보고</td><td>diff + audit + PROCESS.md</td><td>대화창</td></tr>
+    <tr><td>doc-writer</td><td>haiku</td><td>md 전체 + <strong>PROCESS.md 정리 owner</strong></td><td>drift 갱신 + 인수인계 + PROCESS.md 정리</td><td>플랜 + 스펙 + 코드 + PROCESS.md</td><td><code>docs/**/*.md</code></td></tr>
   </tbody>
 </table>
 </div>
 
-<h2 class="section"><span class="num">5</span>분기 시나리오</h2>
+<h2 class="section"><span class="num">6</span>분기 시나리오</h2>
 <div class="panel">
   <div class="callout warn">
     <strong>🛑 architect 모드1에서 차단 이슈</strong> · spec-writer로 회귀하여 스펙 갱신. developer는 호출되지 않음.
@@ -438,7 +499,7 @@
   </div>
 </div>
 
-<h2 class="section"><span class="num">6</span>호출 순서 요약 (체크리스트)</h2>
+<h2 class="section"><span class="num">7</span>호출 순서 요약 (체크리스트)</h2>
 <div class="panel">
   <ol style="margin:0 0 0 18px;color:var(--text)">
     <li><strong>planner</strong> → <code>docs/plan/master-plan.md</code> 작성·승인</li>
@@ -455,7 +516,7 @@
 </div>
 
 <footer>
-  원본: <code>.claude/agents/*.md</code> &middot; 생성 기준일 2026-04-29 &middot; r2_wf v1.0
+  원본: <code>.claude/agents/*.md</code> + <code>docs/PROCESS.md</code> &middot; 생성 기준일 2026-05-12 &middot; r2_wf v1.1
 </footer>
 
 </div>
