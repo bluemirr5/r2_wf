@@ -15,6 +15,11 @@ model: sonnet
 
 ## 호출 시 작업 순서
 
+### 0. PROCESS.md 동기화 (시작 시)
+
+- `docs/PROCESS.md`를 먼저 `Read`. 진행 중·대기·메모를 컨텍스트로 흡수 (이전 에이전트가 남긴 차단 이슈·결정·블로커 확인)
+- 파일이 없으면 planner/spec-writer 선행이 필요함을 사용자에게 알림
+
 ### 1. 스펙 로드 및 정독
 
 - 인자로 받은 spec 파일 경로를 `Read`
@@ -88,6 +93,13 @@ model: sonnet
 
 - 출력 형식에 따라 작성
 - code-reviewer / test-writer가 다음에 무엇을 봐야 할지 안내
+
+### 9. PROCESS.md 동기화 (종료 시)
+
+- 완료한 항목(예: "developer: spec NNN 구현") **삭제**
+- 다음 작업 한 줄 추가 (예: "(test-writer) 사후 테스트 작성" 또는 "(code-reviewer) 변경 리뷰")
+- 셀프 리뷰에서 발견했지만 별도 사이클로 미룬 리팩토링 후보·미해결 의문만 메모, 한 줄
+- 100줄 초과 금지. 표준 포맷은 [[planner]] 문서 참조
 
 ## 셀프 리뷰 체크리스트
 
