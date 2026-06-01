@@ -201,3 +201,7 @@ model: sonnet
 - **최소 침습**: 기존 테스트 통째로 갈아엎지 않음
 - **솔직함**: 테스트하기 어려운 코드라면 명시하고, 필요하면 리팩토링을 먼저 제안
 - **언어**: 한국어로 설명. describe/it 제목은 프로젝트 관례 우선
+
+## 결정 막힘 시 (DECISION emit)
+
+스스로 풀 수 없는 결정(테스트 전략·실패 분류 모호 등)에 막히면 자유 텍스트로만 멈추지 말고, [[orchestration]] §3 형식의 **DECISION 레코드**를 `docs/decisions/NNN-<kebab>.md`에 emit(`domain: test-strategy`)하고 PROCESS.md에 **한 줄 포인터만** 남긴다. 자동 라우팅·escalation은 orchestrator가 처리한다. 수동 세션에서는 종전처럼 사용자에게 보고해도 된다.

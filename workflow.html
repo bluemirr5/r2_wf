@@ -111,13 +111,14 @@
 
 <header class="hero">
   <h1>r2_wf — Claude Lab 에이전트 워크플로우</h1>
-  <p>9개의 전문 에이전트가 <strong>플랜 → 스펙 → 구현 → 검증 → 문서</strong>의 사이클을 굴립니다. 각자 권한 경계가 명확하고, 실패/이슈는 다음 단계로 떠넘기지 않습니다. <strong>모든 호출의 시작·종료에 <code>docs/PROCESS.md</code></strong>를 동기화하여 작업판을 공유합니다.</p>
+  <p>11개의 전문 에이전트가 <strong>플랜 → 스펙 → 구현 → 검증(e2e 포함) → 문서</strong>의 사이클을 굴립니다. 각자 권한 경계가 명확하고, 실패/이슈는 다음 단계로 떠넘기지 않습니다. <strong>모든 호출의 시작·종료에 <code>docs/PROCESS.md</code></strong>를 동기화하여 작업판을 공유합니다. <strong><code>/orchestrate</code></strong>가 전체 파이프라인을 자동 구동하고, 결정에 막히면 <strong>notifier</strong>로 사람에게 escalation합니다.</p>
   <div class="meta">
-    <span class="badge">에이전트 9개</span>
+    <span class="badge">에이전트 11개</span>
     <span class="badge opus">opus 5</span>
-    <span class="badge sonnet">sonnet 3</span>
-    <span class="badge haiku">haiku 1</span>
+    <span class="badge sonnet">sonnet 4</span>
+    <span class="badge haiku">haiku 2</span>
     <span class="badge tool">.claude/agents/*.md</span>
+    <span class="badge" style="color:#a78bfa;border-color:#3b2f63">⚙️ /orchestrate</span>
     <span class="badge" style="color:#fbbf24;border-color:#5a3f12">📋 docs/PROCESS.md</span>
   </div>
 </header>
@@ -213,6 +214,13 @@
         <text class="role" x="14" y="46">N 사이클마다 drift 점검</text>
       </g>
 
+      <!-- e2e-tester (검증, DoD) — 구현 후 실제 동작 검증 -->
+      <g class="node sonnet" transform="translate(530,252)">
+        <rect width="200" height="56"/>
+        <text class="title" x="14" y="24">✚ e2e-tester</text>
+        <text class="role" x="14" y="44">실제 엔드포인트 검증 (DoD)</text>
+      </g>
+
       <!-- Row 4: cycle loop -->
       <g class="node gate" transform="translate(290,460)">
         <rect width="200" height="64"/>
@@ -245,6 +253,11 @@
       <!-- developer -> test-writer 사후 -->
       <path class="edge" d="M470,196 L800,196" marker-end="url(#arr)"/>
       <text class="edge-label" x="600" y="190">사후 모드: 구현 후 테스트</text>
+
+      <!-- developer/test -> e2e-tester (실제 검증) -> verify -->
+      <path class="edge" d="M380,244 C 420,270 480,272 530,280" marker-end="url(#arr)"/>
+      <text class="edge-label" x="392" y="268">구현 후 실제 검증</text>
+      <path class="edge" d="M630,308 L640,320" marker-end="url(#arr)"/>
 
       <!-- developer / test-writer fail -> debugger -->
       <path class="edge fail" d="M380,244 L380,290 L140,290 L140,320" marker-end="url(#arrFail)"/>
@@ -282,7 +295,7 @@
   </div>
 
   <div class="callout">
-    <strong>핵심 규칙</strong> · planner는 코드 안 씀 / spec-writer·architect·security-checker·code-reviewer는 <em>제안만</em> / developer만 코드 작성·수정 / debugger는 <strong>승인 후</strong>에만 Edit / doc-writer는 <code>*.md</code>만 수정.
+    <strong>핵심 규칙</strong> · planner는 코드 안 씀 / spec-writer·architect·security-checker·code-reviewer·e2e-tester는 <em>제안·보고만</em> / developer만 코드 작성·수정 / debugger는 <strong>승인 후</strong>에만 Edit / doc-writer는 <code>*.md</code>만 / notifier는 알림 발송만. <strong><code>/orchestrate</code></strong>(메인 세션)가 전체를 자동 구동 — 섹션 8 참조.
   </div>
   <div class="callout warn">
     <strong>📋 PROCESS.md 동기화 (모든 에이전트 공통)</strong> · 매 호출 <strong>시작 시</strong> <code>docs/PROCESS.md</code>를 Read하여 진행 중·대기·메모를 컨텍스트로 흡수. <strong>종료 시</strong> 완료 항목 삭제 + 남은 작업·블로커 한 줄 갱신. 100줄 초과 금지. read-only 에이전트도 <em>이 파일에 한해</em> Edit/Write 가능.
@@ -292,9 +305,10 @@
 <h2 class="section"><span class="num">2</span>📋 PROCESS.md — 공유 작업판</h2>
 <div class="panel">
   <p style="margin:0 0 12px;color:var(--muted)">
-    9개 에이전트가 사이클 진행 상태를 공유하는 단일 파일 <code>docs/PROCESS.md</code>.
+    11개 에이전트가 사이클 진행 상태를 공유하는 단일 파일 <code>docs/PROCESS.md</code>.
     매 호출 <strong>시작·종료</strong>에 동기화되어, 다음 작업자가 이 파일 하나로 현재 위치를 파악할 수 있습니다.
     완료된 일은 즉시 삭제, 살아있는 작업·블로커·메모만 남깁니다.
+    <strong>결정 레코드·orchestrator 상태는 PROCESS.md 밖</strong>(<code>docs/decisions/</code>·<code>docs/.orch-state.json</code>)에 두어 100줄·즉시삭제 불변식을 보호합니다.
   </p>
   <div class="phases">
     <div class="phase">
@@ -329,6 +343,7 @@
       <ol>
         <li><strong>진행 중</strong> · 상태/블로커</li>
         <li><strong>다음</strong> · 한 줄 요약</li>
+        <li><strong>결정 대기</strong> · 레코드 포인터</li>
         <li><strong>메모</strong> · 한 줄 결정</li>
       </ol>
       <div class="gate">게이트 ▸ planner가 owner</div>
@@ -336,7 +351,7 @@
   </div>
 
   <div class="callout ok">
-    <strong>역할 분담</strong> · <code>planner</code> = 초기 생성 + 표준 포맷 owner / <code>doc-writer</code> = 비대화 정리 1차 책임자 / 나머지 7개 에이전트 = 자기 호출 직전·직후 동기화만.
+    <strong>역할 분담</strong> · <code>planner</code> = 초기 생성 + 표준 포맷 owner / <code>doc-writer</code> = 비대화 정리 1차 책임자(단 <code>docs/decisions/</code>·<code>docs/.orch-state.json</code>은 정리 제외) / 나머지 9개 에이전트 = 자기 호출 직전·직후 동기화만.
   </div>
   <div class="callout warn">
     <strong>🔒 security-checker 예외</strong> · 시크릿·취약점 상세는 PROCESS.md에 절대 기록 금지. "이슈 N건 발견, 본 채팅 보고서 참조" 정도만 한 줄로.
@@ -379,11 +394,12 @@
   <div class="phase">
     <h4>Phase D · 검증·문서</h4>
     <ol>
+      <li><code>e2e-tester</code> 실제 동작 검증</li>
       <li><code>code-reviewer</code></li>
       <li><code>security-checker</code></li>
       <li>N 사이클마다 <code>doc-writer</code></li>
     </ol>
-    <div class="gate">게이트 ▸ Critical 0건</div>
+    <div class="gate">게이트 ▸ DoD: e2e·Critical 0·커밋</div>
   </div>
 </div>
 
@@ -453,6 +469,20 @@
     <div class="tags"><span class="tag">Edit (md)</span><span class="tag">Write</span><span class="tag">git diff</span><span class="tag">📋 PROCESS.md 정리 owner</span></div>
   </div>
 
+  <div class="agent sonnet">
+    <h3>✚ e2e-tester <span class="badge sonnet">sonnet</span></h3>
+    <p class="role">unit/integration이 통과해도 <strong>실제로 띄우면 안 되는</strong> 경우를 잡는 마지막 관문. 스펙의 <strong>E2E 표면</strong> 선언을 읽어 판정하고 실제 엔드포인트·UI·CLI를 검증. <strong>report-only</strong>, 인프라는 하니스 호출만.</p>
+    <div class="when"><strong>호출 시점</strong> · 구현·테스트 후 검증(DoD step 3). 표면 없으면 N/A, 단 <strong>표면 흔적 있는데 미선언이면 누락 신고</strong>.</div>
+    <div class="tags"><span class="tag">Read</span><span class="tag">Grep</span><span class="tag">Bash (하니스·테스트)</span><span class="tag">Edit/Write (PROCESS.md·decisions)</span><span class="tag">📋 PROCESS.md</span></div>
+  </div>
+
+  <div class="agent haiku">
+    <h3>✚ notifier <span class="badge haiku">haiku</span></h3>
+    <p class="role">자동화 루프가 사람 결정을 필요로 할 때, 결정 레코드를 사람이 읽을 메시지로 변환해 <strong>PushNotification(+Slack/Discord)</strong>으로 발송. <strong>outbound 전용</strong> — 사람 답 수신은 orchestrator 재실행이 담당.</p>
+    <div class="when"><strong>호출 시점</strong> · orchestrator가 escalation 결정 시. 발송 후 세션 정지(resume-on-relaunch).</div>
+    <div class="tags"><span class="tag">PushNotification</span><span class="tag">Bash (curl)</span><span class="tag">Edit (PROCESS.md·decisions)</span><span class="tag">📋 PROCESS.md</span></div>
+  </div>
+
 </div>
 
 <h2 class="section"><span class="num">5</span>권한·산출물 매트릭스</h2>
@@ -469,10 +499,13 @@
     <tr><td>architect</td><td>opus</td><td>PROCESS.md만</td><td>리뷰 보고서 / 구조 가이드</td><td>스펙 + 플랜 + 코드 + PROCESS.md</td><td>대화창</td></tr>
     <tr><td>test-writer</td><td>sonnet</td><td>테스트 + PROCESS.md</td><td>테스트 코드 + 실행 결과</td><td><code>git diff HEAD</code> + PROCESS.md</td><td>테스트 파일 / 실행 로그</td></tr>
     <tr><td>developer</td><td>sonnet</td><td>코드·md 전체</td><td>구현 코드 + 빌드 통과</td><td>스펙 + 기존 코드 + PROCESS.md</td><td>소스 트리</td></tr>
+    <tr><td>e2e-tester</td><td>sonnet</td><td>PROCESS.md·decisions만</td><td>e2e 판정 + 실제 동작 검증 결과</td><td>스펙 E2E 표면 + 하니스 + PROCESS.md</td><td>대화창 / 실행 로그</td></tr>
     <tr><td>debugger</td><td>opus</td><td>승인 후 코드 + PROCESS.md</td><td>원인 분석 + 수정안</td><td>실패 로그 + PROCESS.md</td><td>대화창 / 승인 후 코드</td></tr>
     <tr><td>code-reviewer</td><td>sonnet</td><td>PROCESS.md만</td><td>Critical/Warn/Suggest 보고</td><td><code>git diff HEAD</code> + PROCESS.md</td><td>대화창</td></tr>
     <tr><td>security-checker</td><td>opus</td><td>PROCESS.md만 (요약만)</td><td>OWASP 심층 보고</td><td>diff + audit + PROCESS.md</td><td>대화창</td></tr>
     <tr><td>doc-writer</td><td>haiku</td><td>md 전체 + <strong>PROCESS.md 정리 owner</strong></td><td>drift 갱신 + 인수인계 + PROCESS.md 정리</td><td>플랜 + 스펙 + 코드 + PROCESS.md</td><td><code>docs/**/*.md</code></td></tr>
+    <tr><td>notifier</td><td>haiku</td><td>PROCESS.md·decisions만</td><td>사람 알림 발송 (push/Slack)</td><td>결정 레코드 + PROCESS.md</td><td>PushNotification / webhook</td></tr>
+    <tr><td><strong>orchestrate</strong> (커맨드)</td><td>메인 세션</td><td>전체 (dispatch·게이트·커밋)</td><td>사이클 자동 구동 + escalation</td><td>PROCESS.md + .orch-state.json + decisions</td><td><code>.claude/commands/</code></td></tr>
   </tbody>
 </table>
 </div>
@@ -494,8 +527,14 @@
   <div class="callout">
     <strong>📚 N 사이클 누적</strong> · doc-writer가 마스터 플랜·스펙과 코드의 drift를 분류(A/B/C/D)하고, A만 직접 갱신. B/C는 사용자 보고.
   </div>
+  <div class="callout warn">
+    <strong>🧪 e2e 적용 판정</strong> · 스펙에 <strong>E2E 표면</strong>이 선언됐고 하니스(<code>e2e:up</code>)가 있으면 실제 엔드포인트 검증. 표면 없으면 N/A. <strong>엔드포인트 흔적은 있는데 미선언이면</strong> e2e-tester가 누락으로 신고(검증 없이 통과되는 갭 방지). 실패는 (a)프로덕션버그/(b)테스트오류/(c)환경문제로 분류 → (a)는 debugger.
+  </div>
+  <div class="callout warn">
+    <strong>🙋 사람 결정 필요</strong> · 보안 수용·신규 의존성·비즈니스·비가역·1모듈 초과 영향은 항상 사람. orchestrator가 결정 레코드 생성 → notifier 발송 → <strong>세션 정지</strong>. 사람이 레코드에 답 기록 후 <code>/orchestrate</code> 재실행하면 그 지점에서 재개(resume-on-relaunch).
+  </div>
   <div class="callout ok">
-    <strong>✅ 사이클 종료</strong> · code-reviewer Critical 0건 + security-checker Critical 0건 + 테스트 그린. 다음 spec-writer 호출로 사이클 반복.
+    <strong>✅ 사이클 종료 (DoD)</strong> · AC 구현 + 테스트 그린 + <strong>e2e 통과(또는 N/A)</strong> + code-reviewer Critical 0 + security-checker Critical/High 0 + doc-writer 정리 → <strong>작업 브랜치 커밋·PR</strong>(기본 브랜치·자동 머지 ❌). 다음 spec-writer로 사이클 반복.
   </div>
 </div>
 
@@ -508,15 +547,68 @@
     <li>모드 결정: <strong>TDD</strong>면 ④ test-writer 선행 / <strong>사후</strong>면 ⑤ developer 선행</li>
     <li><strong>developer</strong> 구현 (필요 시 ③' architect 모드2 / ⑥ debugger 협업)</li>
     <li>사후 모드라면 <strong>test-writer</strong> 후행, TDD라면 그린 확인</li>
+    <li><strong>e2e-tester</strong> → E2E 표면 판정 + 실제 동작 검증 (DoD)</li>
     <li><strong>code-reviewer</strong> → 변경사항 리뷰</li>
     <li><strong>security-checker</strong> → OWASP 심층 검사</li>
     <li>N 사이클마다 <strong>doc-writer</strong> → drift 점검 + 인수인계</li>
-    <li>다음 사이클을 위해 ②로 복귀</li>
+    <li><strong>DoD 통과 → 커밋·PR</strong>, 다음 사이클을 위해 ②로 복귀</li>
   </ol>
+  <div class="callout"><strong>자동 구동</strong> · 위 순서는 <code>/orchestrate</code>가 자동으로 dispatch합니다. 사람은 escalation된 결정에만 개입 — 섹션 8.</div>
+</div>
+
+<h2 class="section"><span class="num">8</span>⚙️ 오케스트레이션 레이어 (완전 자동화)</h2>
+<div class="panel">
+  <p style="margin:0 0 12px;color:var(--muted)">
+    위 11개 에이전트를 <strong>사람 개입 없이 순차 구동</strong>하는 레이어. Claude Code에서 서브에이전트는 다른 서브에이전트를 호출할 수 없으므로, orchestrator는 에이전트가 아니라 <strong>메인 세션이 읽는 커맨드</strong> <code>/orchestrate</code>입니다. 프로토콜 단일 진실원천: <code>docs/orchestration.md</code>.
+  </p>
+  <div class="phases">
+    <div class="phase">
+      <h4>① 결정 라우팅</h4>
+      <ol>
+        <li>에이전트가 못 푸는 결정 → <strong>DECISION 레코드</strong> emit</li>
+        <li>orchestrator가 domain별 판단 에이전트에 라우팅</li>
+        <li>불가하면 notifier → 사람</li>
+      </ol>
+      <div class="gate">게이트 ▸ 판단주체 ≠ 적용주체</div>
+    </div>
+    <div class="phase">
+      <h4>② 완료 게이트(DoD)</h4>
+      <ol>
+        <li>AC·테스트·e2e·리뷰·보안·doc 통과</li>
+        <li>코드 변경 시 동적 검사 재실행</li>
+        <li>통과 후에만 커밋·PR</li>
+      </ol>
+      <div class="gate">게이트 ▸ 전부 충족 시 다음 사이클</div>
+    </div>
+    <div class="phase">
+      <h4>③ 서킷브레이커·예산</h4>
+      <ol>
+        <li>실패 <strong>시그니처</strong> N회 반복 → 트립</li>
+        <li>글로벌 예산(dispatch·cycle·시간) 천장</li>
+        <li>트립 시 사람에게 escalation</li>
+      </ol>
+      <div class="gate">게이트 ▸ <code>.orch-state.json</code></div>
+    </div>
+    <div class="phase">
+      <h4>④ 비동기 사람 응답</h4>
+      <ol>
+        <li>notifier 발송 → 결정 영속화</li>
+        <li><strong>세션 정지</strong> (대기 ❌)</li>
+        <li>답 기록 후 <code>/orchestrate</code> 재실행 → 재개</li>
+      </ol>
+      <div class="gate">게이트 ▸ resume-on-relaunch</div>
+    </div>
+  </div>
+  <div class="callout warn">
+    <strong>⚠️ 알려진 한계</strong> · 마크다운 페르소나의 결정적 집행(카운터·예산·게이트 순서)은 <strong>best-effort</strong>. 드라이런에서 흔들리면 그 로직을 <strong>Workflow 스크립트</strong>로 이관하는 것이 1순위 후속 (<code>orchestration.md</code> §9).
+  </div>
+  <div class="callout">
+    <strong>3-스토어 분리</strong> · <code>docs/PROCESS.md</code>(작업판, 100줄·즉시삭제) / <code>docs/decisions/</code>(결정 레코드, append-only) / <code>docs/.orch-state.json</code>(orchestrator 상태). 결정·카운터를 PROCESS.md에 넣지 않아 doc-writer 정리에 의해 날아가지 않게 보호.
+  </div>
 </div>
 
 <footer>
-  원본: <code>.claude/agents/*.md</code> + <code>docs/PROCESS.md</code> &middot; 생성 기준일 2026-05-12 &middot; r2_wf v1.1
+  원본: <code>.claude/agents/*.md</code> + <code>.claude/commands/orchestrate.md</code> + <code>docs/orchestration.md</code> + <code>docs/PROCESS.md</code> &middot; 갱신 2026-06-01 &middot; r2_wf v1.2
 </footer>
 
 </div>
