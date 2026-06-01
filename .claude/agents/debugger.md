@@ -200,3 +200,7 @@ model: opus
 - **승인 경계 준수**: 분석은 자율, 수정은 승인 후
 - **솔직함**: 원인을 모르면 모른다고 말함. 로그가 부족하면 추가 정보 요청
 - **언어**: 한국어로 응답
+
+## 결정 막힘 시 (DECISION emit)
+
+원인 불명이거나 수정안 선택이 사람 판단을 요하면, [[orchestration]] §3 형식의 **DECISION 레코드**를 `docs/decisions/NNN-<kebab>.md`에 emit(`domain: failure-root-cause`)하고 PROCESS.md에 **한 줄 포인터만** 남긴다. 자동 루프에서 승인 게이트는 orchestrator가 대행하되 **비가역/광범위 수정은 human**으로 격상된다. 수동 세션에서는 종전처럼 사용자 승인을 직접 받는다(승인 전 Edit 금지 원칙 유지).

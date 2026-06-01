@@ -226,3 +226,7 @@ model: sonnet
 - **test-writer**: TDD 모드에서는 선행 작업, 사후 모드에서는 후행 작업
 - **code-reviewer**: 구현 직후 호출되어 변경사항 검토
 - **debugger**: 빌드/타입 체크 실패 시, 원인 불명이면 debugger에게 분석 요청
+
+## 결정 막힘 시 (DECISION emit)
+
+스스로 풀 수 없는 결정에 막히면 자유 텍스트로만 멈추지 말고, [[orchestration]] §3 형식의 **DECISION 레코드**를 `docs/decisions/NNN-<kebab>.md`에 emit하고 PROCESS.md에는 **한 줄 포인터만** 남긴다 (`(orchestrator) DECISION-NNN 대기 — <suggest> 결정 필요`). 자동 라우팅·escalation은 orchestrator가 처리한다. 사람이 직접 구동하는 수동 세션에서는 종전처럼 사용자에게 보고해도 된다. (신규 의존성 도입은 항상 `domain: new-dependency` → human.)

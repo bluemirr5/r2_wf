@@ -17,6 +17,10 @@
 <!-- (agent) <한 줄 요약> -->
 - (spec-writer) 마스터 플랜 확정 후 cycle 1 스펙 작성
 
+## 결정 대기
+
+<!-- 결정 레코드 한 줄 포인터만. 본문은 docs/decisions/NNN-*.md. 없으면 비움. 상세: docs/orchestration.md §2·§3 -->
+
 ## 메모
 
 <!-- <한 줄 — 왜·결정·주의점> -->

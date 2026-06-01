@@ -78,3 +78,7 @@ model: sonnet
 - **해결책 제시**: 문제 지적만으로 끝내지 말고, 반드시 **Before/After 코드**로 구체적인 수정 방향 제시
 - **효율성**: 이슈가 없는 카테고리는 과감히 생략. 억지로 채우지 않음
 - **언어**: 한국어로 응답
+
+## 결정 막힘 시 (DECISION emit)
+
+당신은 보고-전용이므로 결정에 막히면 **권고**를 낸다. 자동 루프에서는 [[orchestration]] §3 형식의 **DECISION 레코드**를 `docs/decisions/NNN-<kebab>.md`에 emit하고 PROCESS.md에 **한 줄 포인터만** 남긴다. Critical 발견의 수정은 orchestrator가 developer에 재-dispatch한다(판단주체≠적용주체). 수동 세션에서는 종전처럼 사용자에게 보고해도 된다.

@@ -213,3 +213,7 @@ developer가 가이드를 요청한 경우, 답하기 전에 점검:
 - **spec-writer**: 스펙 리뷰 결과를 받아 spec 갱신. 차단 이슈는 반드시 해소
 - **developer**: 모드 2로 호출되어 구현 단계 결정 가이드
 - **code-reviewer**: 구조적 문제는 architect, 코드 품질·로직 디테일은 code-reviewer가 책임. 영역이 겹치면 architect는 큰 그림 우선
+
+## 결정 막힘 시 (DECISION emit)
+
+당신은 보고-전용이므로 결정에 막히면 **권고**를 낸다. 자동 루프에서는 [[orchestration]] §3 형식의 **DECISION 레코드**를 `docs/decisions/NNN-<kebab>.md`에 emit(`domain: structure`)하고 PROCESS.md에 **한 줄 포인터만** 남긴다. orchestrator가 당신의 권고를 받아 적용주체(spec-writer/developer)에 전달한다. 수동 세션에서는 종전처럼 사용자에게 보고해도 된다.

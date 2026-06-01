@@ -20,21 +20,26 @@ curl -fsSL https://raw.githubusercontent.com/bluemirr5/r2_wf/main/install.sh | b
 
 ```
 .claude/
-├── agents/          # 커스텀 에이전트들
+├── agents/          # 커스텀 에이전트들 (11개)
 │   ├── architect.md
 │   ├── code-reviewer.md
 │   ├── debugger.md
 │   ├── developer.md
 │   ├── doc-writer.md
+│   ├── e2e-tester.md
+│   ├── notifier.md
 │   ├── planner.md
 │   ├── security-checker.md
 │   ├── spec-writer.md
 │   └── test-writer.md
 ├── commands/        # 커스텀 명령어들
 │   ├── md2html.md
+│   ├── orchestrate.md
 │   └── review-loop.md
 └── settings.local.json
 ```
+
+자동화 프로토콜은 `docs/orchestration.md`를 참조하세요. `/orchestrate`로 전체 파이프라인을 자동 구동합니다.
 
 ## 사용법
 

@@ -326,8 +326,16 @@ planner는 첫 호출 시 `docs/PROCESS.md`를 다음 골격으로 생성한다.
 ## 다음
 - (agent) <한 줄 요약>
 
+## 결정 대기
+<!-- 결정 레코드 한 줄 포인터만. 본문은 docs/decisions/NNN-*.md. 없으면 비움 -->
+- (orchestrator) DECISION-NNN 대기 — <suggest> 결정 필요
+
 ## 메모
 - <한 줄 — 왜·결정·주의점>
 ~~~
 
-**경량 유지 원칙**: 전체 100줄 초과 금지. 완료 이력·에세이·장문 금지. 한 줄 항목만. 메모가 길어지면 spec/플랜으로 이관.
+**경량 유지 원칙**: 전체 100줄 초과 금지. 완료 이력·에세이·장문 금지. 한 줄 항목만. 메모가 길어지면 spec/플랜으로 이관. **결정 레코드 본문·카운터는 PROCESS.md에 절대 넣지 않는다** — `docs/decisions/`·`docs/.orch-state.json`에. 상세는 [[orchestration]] §2.
+
+## 결정 막힘 시 (DECISION emit)
+
+플랜·범위 결정조차 막히면(보통 사람 판단 필요), [[orchestration]] §3 형식의 **DECISION 레코드**를 `docs/decisions/NNN-<kebab>.md`에 emit(`domain: plan-scope` 또는 `business`)하고 PROCESS.md에 **한 줄 포인터만** 남긴다. 비즈니스·우선순위·비가역은 항상 human. 수동 세션에서는 종전처럼 사용자에게 보고.
