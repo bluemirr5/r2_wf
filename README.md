@@ -12,9 +12,19 @@ curl -fsSL https://raw.githubusercontent.com/bluemirr5/r2_wf/main/install.sh | b
 
 ## 설치되는 것
 
-- `agents/` - 커스텀 agents (code-reviewer, architect, debugger 등)
-- `commands/` - 커스텀 commands (md2html, review-loop 등)
-- `settings.local.json` - 로컬 설정
+- `.claude/agents/` - 커스텀 agents (11개: planner, spec-writer, architect, developer, test-writer, e2e-tester, code-reviewer, security-checker, debugger, doc-writer, notifier)
+- `.claude/commands/` - 커스텀 commands (md2html, review-loop, orchestrate)
+- `.claude/settings.local.json` - 로컬 설정
+- `docs/orchestration.md` - 자동화 프로토콜 (SoT)
+- `docs/decisions/`, `docs/orch-state.example.json` - 오케스트레이션 스토어·상태 스키마
+
+> 프로젝트가 생성하는 `docs/PROCESS.md`·`docs/plans/`·`docs/specs/` 는 설치 대상이 아닙니다.
+
+### 특정 브랜치에서 설치 (테스트용)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bluemirr5/r2_wf/<branch>/install.sh | R2WF_BRANCH=<branch> bash
+```
 
 ## 구조
 
@@ -47,12 +57,14 @@ curl -fsSL https://raw.githubusercontent.com/bluemirr5/r2_wf/main/install.sh | b
 
 ## 업데이트
 
-`.claude` 디렉토리를 최신 버전으로 업데이트하려면:
+`.claude` 디렉토리와 프로토콜 문서를 최신 버전으로 업데이트하려면:
 
 ```bash
-rm -rf .claude
+rm -rf .claude docs/orchestration.md docs/orch-state.example.json docs/decisions/README.md
 curl -fsSL https://raw.githubusercontent.com/bluemirr5/r2_wf/main/install.sh | bash
 ```
+
+> 재설치는 프로토콜 문서를 덮어쓰지만, 프로젝트가 만든 `docs/PROCESS.md`·`plans/`·`specs/`·`decisions/<NNN>.md` 레코드는 건드리지 않습니다.
 
 ## 버전 히스토리
 
