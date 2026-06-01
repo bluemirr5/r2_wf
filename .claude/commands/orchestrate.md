@@ -40,7 +40,7 @@ planner → spec-writer → architect(스펙리뷰) → developer → test-write
   → e2e-tester → code-reviewer → security-checker → (debugger 필요시) → doc-writer → [다음 사이클]
 ```
 
-- 첫 실행에 플랜이 없으면 **planner부터**. 플랜이 있으면 PROCESS.md "다음"을 이어받음
+- 첫 실행에 플랜이 없으면 **planner부터** — 목표는 `docs/goal.md`(있으면) 또는 사용자가 준 입력에서. 플랜이 있으면 PROCESS.md "다음"을 이어받음
 - architect는 스펙 직후(모드1) 또는 구현 결정 시(모드2)
 
 ### 2. dispatch
