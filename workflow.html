@@ -133,7 +133,7 @@
   </div>
 
   <div class="flow-wrap">
-    <svg class="flow" viewBox="0 0 1200 560" xmlns="http://www.w3.org/2000/svg">
+    <svg class="flow" viewBox="0 0 1090 620" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
           <path d="M0,0 L10,5 L0,10 z" class="arrow"/>
@@ -146,151 +146,80 @@
         </marker>
       </defs>
 
-      <!-- Row 1: planner -> spec-writer -> architect -->
-      <g class="node opus" transform="translate(40,40)">
-        <rect width="180" height="64"/>
-        <text class="title" x="14" y="26">① planner</text>
-        <text class="role" x="14" y="46">마스터 플랜 + 자체검증</text>
-      </g>
-      <g class="node opus" transform="translate(290,40)">
-        <rect width="180" height="64"/>
-        <text class="title" x="14" y="26">② spec-writer</text>
-        <text class="role" x="14" y="46">사이클별 상세 스펙</text>
-      </g>
-      <g class="node opus" transform="translate(540,40)">
-        <rect width="200" height="64"/>
-        <text class="title" x="14" y="26">③ architect (모드1)</text>
-        <text class="role" x="14" y="46">스펙 리뷰 / 정합성 검증</text>
-      </g>
+      <!-- ===== Edges (drawn first so nodes sit on top) ===== -->
+      <!-- Row 1 main flow -->
+      <path class="edge" d="M240,80 H310" marker-end="url(#arr)"/>
+      <path class="edge" d="M510,80 H580" marker-end="url(#arr)"/>
+      <path class="edge" d="M780,80 H850" marker-end="url(#arr)"/>
 
-      <!-- Gate after architect -->
-      <g class="node gate" transform="translate(800,40)">
-        <rect width="170" height="64"/>
-        <text class="title" x="14" y="26">🛑 차단 이슈?</text>
-        <text class="role" x="14" y="46">있으면 spec-writer로 회귀</text>
-      </g>
+      <!-- Gate 차단 -> spec-writer (회귀, 상단 여백 경로) -->
+      <path class="edge fail dashed" d="M950,50 V22 H430 V50" marker-end="url(#arrFail)"/>
+      <text class="edge-label" x="470" y="16">🛑 차단 이슈 → 스펙 재작성</text>
 
-      <!-- Row 2: TDD branch / 사후 branch -->
-      <g class="node sonnet" transform="translate(40,180)">
-        <rect width="200" height="64"/>
-        <text class="title" x="14" y="26">④a test-writer (TDD)</text>
-        <text class="role" x="14" y="46">스펙→테스트 선작성</text>
-      </g>
-      <g class="node sonnet" transform="translate(290,180)">
-        <rect width="180" height="64"/>
-        <text class="title" x="14" y="26">⑤ developer</text>
-        <text class="role" x="14" y="46">실제 구현 (Edit/Write)</text>
-      </g>
-      <g class="node opus" transform="translate(540,180)">
-        <rect width="200" height="64"/>
-        <text class="title" x="14" y="26">③' architect (모드2)</text>
-        <text class="role" x="14" y="46">구조 결정 가이드 (요청 시)</text>
-      </g>
-      <g class="node sonnet" transform="translate(800,180)">
-        <rect width="200" height="64"/>
-        <text class="title" x="14" y="26">④b test-writer (사후)</text>
-        <text class="role" x="14" y="46">구현→테스트 후작성</text>
-      </g>
+      <!-- Gate OK -> developer -->
+      <path class="edge" d="M950,110 V162 H680 V215" marker-end="url(#arr)"/>
+      <text class="edge-label" x="700" y="156">✅ 진행 가능</text>
 
-      <!-- Row 3: debugger gate / code-reviewer / security-checker -->
-      <g class="node opus" transform="translate(40,320)">
-        <rect width="200" height="64"/>
-        <text class="title" x="14" y="26">⑥ debugger</text>
-        <text class="role" x="14" y="46">실패 원인 분석 + 승인 후 수정</text>
-      </g>
-      <g class="node sonnet" transform="translate(290,320)">
-        <rect width="200" height="64"/>
-        <text class="title" x="14" y="26">⑦ code-reviewer</text>
-        <text class="role" x="14" y="46">로직·가독성·영향도 리뷰</text>
-      </g>
-      <g class="node opus" transform="translate(540,320)">
-        <rect width="200" height="64"/>
-        <text class="title" x="14" y="26">⑧ security-checker</text>
-        <text class="role" x="14" y="46">OWASP 심층 검사 (보고만)</text>
-      </g>
-      <g class="node haiku" transform="translate(800,320)">
-        <rect width="200" height="64"/>
-        <text class="title" x="14" y="26">⑨ doc-writer</text>
-        <text class="role" x="14" y="46">N 사이클마다 drift 점검</text>
-      </g>
+      <!-- debugger -> developer (승인 후 수정) -->
+      <path class="edge dashed" d="M140,215 V185 H620 V215" marker-end="url(#arr)"/>
+      <text class="edge-label" x="250" y="179">승인 후 수정</text>
 
-      <!-- e2e-tester (검증, DoD) — 구현 후 실제 동작 검증 -->
-      <g class="node sonnet" transform="translate(530,252)">
-        <rect width="200" height="56"/>
-        <text class="title" x="14" y="24">✚ e2e-tester</text>
-        <text class="role" x="14" y="44">실제 엔드포인트 검증 (DoD)</text>
-      </g>
+      <!-- test-writer <-> developer (TDD 선행 / 사후 후행) -->
+      <path class="edge" d="M510,245 H580" marker-start="url(#arr)" marker-end="url(#arr)"/>
+      <text class="edge-label" x="395" y="208">TDD 선행 / 사후 후행</text>
 
-      <!-- Row 4: cycle loop -->
-      <g class="node gate" transform="translate(290,460)">
-        <rect width="200" height="64"/>
-        <text class="title" x="14" y="26">🔁 다음 사이클</text>
-        <text class="role" x="14" y="46">spec-writer로 복귀</text>
-      </g>
+      <!-- developer <-> architect 모드2 (구조 결정 질의) -->
+      <path class="edge dashed loop" d="M780,245 H850" marker-start="url(#arrLoop)" marker-end="url(#arrLoop)"/>
+      <text class="edge-label" x="748" y="208">구조 결정 질의</text>
 
-      <!-- Edges row 1 -->
-      <path class="edge" d="M220,72 L290,72" marker-end="url(#arr)"/>
-      <path class="edge" d="M470,72 L540,72" marker-end="url(#arr)"/>
-      <path class="edge" d="M740,72 L800,72" marker-end="url(#arr)"/>
+      <!-- developer -> e2e-tester (구현 후 실제 검증) -->
+      <path class="edge" d="M680,275 V327 H140 V380" marker-end="url(#arr)"/>
+      <text class="edge-label" x="430" y="321">구현 후 실제 검증</text>
 
-      <!-- Gate -> back to spec-writer (fail / blocking) -->
-      <path class="edge fail dashed" d="M885,40 C 885,10 380,0 380,40" marker-end="url(#arrFail)"/>
-      <text class="edge-label" x="560" y="14">차단 이슈 → spec 재작성</text>
+      <!-- developer / test-writer -> debugger (실패) -->
+      <path class="edge fail" d="M640,275 V302 H140 V275" marker-end="url(#arrFail)"/>
+      <path class="edge fail" d="M410,275 V302"/>
+      <text class="edge-label" x="250" y="296">빌드/타입/테스트 실패</text>
 
-      <!-- Architect OK -> developer (TDD branch) -->
-      <path class="edge" d="M885,104 L885,150 L380,150 L380,180" marker-end="url(#arr)"/>
-      <text class="edge-label" x="610" y="146">✅ 진행 가능</text>
+      <!-- 검증 행 -->
+      <path class="edge" d="M240,410 H310" marker-end="url(#arr)"/>
+      <path class="edge" d="M510,410 H580" marker-end="url(#arr)"/>
+      <path class="edge dashed" d="M780,410 H850" marker-end="url(#arr)"/>
+      <text class="edge-label" x="778" y="373">N 사이클마다</text>
 
-      <!-- TDD: test-writer -> developer -->
-      <path class="edge" d="M240,212 L290,212" marker-end="url(#arr)"/>
-      <text class="edge-label" x="245" y="206">테스트 우선</text>
+      <!-- code-reviewer -> developer (Critical 발견 시) -->
+      <path class="edge fail dashed" d="M410,380 V355 H700 V275" marker-end="url(#arrFail)"/>
+      <text class="edge-label" x="430" y="349">Critical 발견 시</text>
 
-      <!-- developer <-> architect (mode2) -->
-      <path class="edge dashed loop" d="M470,212 L540,212" marker-end="url(#arrLoop)"/>
-      <path class="edge dashed loop" d="M540,232 L470,232" marker-end="url(#arrLoop)"/>
-      <text class="edge-label" x="478" y="252">구조 결정 질의</text>
+      <!-- doc-writer -> 다음 사이클 -->
+      <path class="edge loop" d="M950,440 V485 H545 V530" marker-end="url(#arrLoop)"/>
+      <text class="edge-label" x="640" y="479">사이클 종료 → 다음 스펙</text>
 
-      <!-- developer -> test-writer 사후 -->
-      <path class="edge" d="M470,196 L800,196" marker-end="url(#arr)"/>
-      <text class="edge-label" x="600" y="190">사후 모드: 구현 후 테스트</text>
+      <!-- 다음 사이클 -> spec-writer (루프, 좌측 여백 경로) -->
+      <path class="edge loop" d="M445,560 H14 V32 H390 V50" marker-end="url(#arrLoop)"/>
+      <text class="edge-label" x="80" y="553">다음 사이클 반복</text>
 
-      <!-- developer/test -> e2e-tester (실제 검증) -> verify -->
-      <path class="edge" d="M380,244 C 420,270 480,272 530,280" marker-end="url(#arr)"/>
-      <text class="edge-label" x="392" y="268">구현 후 실제 검증</text>
-      <path class="edge" d="M630,308 L640,320" marker-end="url(#arr)"/>
+      <!-- ===== Nodes ===== -->
+      <!-- Row 1: 계획·명세 -->
+      <g class="node opus" transform="translate(40,50)"><rect width="200" height="60"/><text class="title" x="14" y="25">① planner</text><text class="role" x="14" y="45">마스터 플랜 + 자체검증</text></g>
+      <g class="node opus" transform="translate(310,50)"><rect width="200" height="60"/><text class="title" x="14" y="25">② spec-writer</text><text class="role" x="14" y="45">사이클별 상세 스펙</text></g>
+      <g class="node opus" transform="translate(580,50)"><rect width="200" height="60"/><text class="title" x="14" y="25">③ architect (모드1)</text><text class="role" x="14" y="45">스펙 리뷰 / 정합성</text></g>
+      <g class="node gate" transform="translate(850,50)"><rect width="200" height="60"/><text class="title" x="14" y="25">🛑 차단 이슈?</text><text class="role" x="14" y="45">있으면 spec 회귀</text></g>
 
-      <!-- developer / test-writer fail -> debugger -->
-      <path class="edge fail" d="M380,244 L380,290 L140,290 L140,320" marker-end="url(#arrFail)"/>
-      <text class="edge-label" x="160" y="282">빌드/타입/테스트 실패</text>
-      <path class="edge fail" d="M900,244 L900,290 L140,290" />
+      <!-- Row 2: 구현 -->
+      <g class="node opus" transform="translate(40,215)"><rect width="200" height="60"/><text class="title" x="14" y="25">⑥ debugger</text><text class="role" x="14" y="45">원인분석 + 승인 후 수정</text></g>
+      <g class="node sonnet" transform="translate(310,215)"><rect width="200" height="60"/><text class="title" x="14" y="25">④ test-writer</text><text class="role" x="14" y="45">의미 있는 테스트 작성</text></g>
+      <g class="node sonnet" transform="translate(580,215)"><rect width="200" height="60"/><text class="title" x="14" y="25">⑤ developer</text><text class="role" x="14" y="45">실제 구현 (Edit/Write)</text></g>
+      <g class="node opus" transform="translate(850,215)"><rect width="200" height="60"/><text class="title" x="14" y="25">③' architect (모드2)</text><text class="role" x="14" y="45">구조 결정 가이드</text></g>
 
-      <!-- debugger 승인 -> developer -->
-      <path class="edge dashed" d="M140,320 L140,260 L290,260" marker-end="url(#arr)"/>
-      <text class="edge-label" x="50" y="276">승인 후 수정</text>
+      <!-- Row 3: 검증·문서 -->
+      <g class="node sonnet" transform="translate(40,380)"><rect width="200" height="60"/><text class="title" x="14" y="25">✚ e2e-tester</text><text class="role" x="14" y="45">실제 동작 검증 (DoD)</text></g>
+      <g class="node sonnet" transform="translate(310,380)"><rect width="200" height="60"/><text class="title" x="14" y="25">⑦ code-reviewer</text><text class="role" x="14" y="45">로직 · 영향도 리뷰</text></g>
+      <g class="node opus" transform="translate(580,380)"><rect width="200" height="60"/><text class="title" x="14" y="25">⑧ security-checker</text><text class="role" x="14" y="45">OWASP 심층 (보고)</text></g>
+      <g class="node haiku" transform="translate(850,380)"><rect width="200" height="60"/><text class="title" x="14" y="25">⑨ doc-writer</text><text class="role" x="14" y="45">N 사이클마다 drift</text></g>
 
-      <!-- developer -> code-reviewer -->
-      <path class="edge" d="M380,244 L380,320" marker-end="url(#arr)"/>
-      <text class="edge-label" x="386" y="290">변경 직후</text>
-
-      <!-- code-reviewer -> security-checker -->
-      <path class="edge" d="M490,352 L540,352" marker-end="url(#arr)"/>
-
-      <!-- security-checker -> doc-writer -->
-      <path class="edge dashed" d="M740,352 L800,352" marker-end="url(#arr)"/>
-      <text class="edge-label" x="745" y="346">N 사이클마다</text>
-
-      <!-- doc-writer -> next cycle / loop back to spec-writer -->
-      <path class="edge loop" d="M900,384 L900,440 L490,492 L490,492" />
-      <path class="edge loop" d="M900,440 L490,440 L490,460" marker-end="url(#arrLoop)"/>
-      <text class="edge-label" x="600" y="434">사이클 종료 → 다음 스펙</text>
-
-      <!-- code-reviewer back to developer (이슈 시) -->
-      <path class="edge fail dashed" d="M390,320 L390,300 L380,300 L380,244" marker-end="url(#arrFail)"/>
-      <text class="edge-label" x="396" y="308">Critical 발견 시</text>
-
-      <!-- next cycle -> spec-writer -->
-      <path class="edge loop" d="M390,460 L390,120 L380,120 L380,104" marker-end="url(#arrLoop)"/>
-      <text class="edge-label" x="252" y="124">반복</text>
+      <!-- Row 4: 사이클 루프 -->
+      <g class="node gate" transform="translate(445,530)"><rect width="200" height="60"/><text class="title" x="14" y="25">🔁 다음 사이클</text><text class="role" x="14" y="45">spec-writer로 복귀</text></g>
     </svg>
   </div>
 
