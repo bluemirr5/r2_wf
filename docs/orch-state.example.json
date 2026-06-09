@@ -1,8 +1,12 @@
 {
-  "_comment": "orchestrator 전용 상태. 런타임 라이브 파일은 docs/.orch-state.json (orchestrate가 첫 실행 시 이 예시를 복사해 초기화). 스키마 설명: ../orchestration.md §8. orchestrator만 read/write — doc-writer 정리 대상 제외.",
+  "_comment": "orchestrator 전용 상태. 런타임 라이브 파일은 docs/.orch-state.json (orchestrate가 첫 실행 시 이 예시를 복사해 초기화). 스키마 설명: ../orchestration.md §8. orchestrator만 read/write — doc-writer 정리 대상 제외. status·current_step·phase·updated_at은 대시보드에 공개 가능한 머신리더블 현황 필드(§8 '대시보드 현황 필드'). budget·failure_signatures는 내부 전용 — 절대 push 안 함.",
+  "status": "not-started",
+  "current_step": null,
+  "phase": 0,
   "cycle": 0,
   "dispatches": 0,
   "started_at": null,
+  "updated_at": null,
   "budget": {
     "max_dispatches": 200,
     "max_cycles": 10,

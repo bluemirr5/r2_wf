@@ -1,0 +1,5 @@
+# 대시보드 연결 설정 — 비밀 토큰 포함, 절대 커밋 금지 (docs/orchestration.md §11)
+.claude/dashboard.json
+
+# OS
+.DS_Store

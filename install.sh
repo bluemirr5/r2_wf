@@ -39,6 +39,13 @@ for f in docs/orchestration.md docs/orch-state.example.json docs/decisions/READM
     fi
 done
 
+# .gitignore에 대시보드 옵트인 설정 등재 보장 (비밀 토큰 누출 방지 — orchestration.md §11)
+# 대시보드 연결은 .claude/dashboard.json을 직접 만들어 옵트인. 토이 프로젝트는 파일이 없어 비공개 기본.
+if ! grep -qxF ".claude/dashboard.json" .gitignore 2>/dev/null; then
+    printf '\n# 대시보드 연결 설정 — 비밀 토큰 포함, 커밋 금지 (docs/orchestration.md §11)\n.claude/dashboard.json\n' >> .gitignore
+    echo "✅ .gitignore: .claude/dashboard.json 등재"
+fi
+
 echo ""
 echo "Directory structure:"
 ls -la .claude/

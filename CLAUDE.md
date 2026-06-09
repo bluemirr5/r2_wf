@@ -52,6 +52,7 @@ planner → spec-writer → architect → developer → test-writer → **e2e-te
 - **완료 게이트(DoD)**: AC + 테스트 + e2e + 리뷰 + 보안 + doc 통과 후에만 커밋·다음 사이클.
 - **서킷브레이커·예산**: 동일 실패 반복/예산 초과 시 정지.
 - **비동기 사람 응답**: 대기하지 않고 영속화 후 정지, 사람이 답 기록 후 `/orchestrate` 재실행(resume-on-relaunch).
+- **대시보드 보고(옵트인, 기본 비공개)**: 프로젝트 현황(`status`·`current_step`·`phase`·`updated_at`)·산출물을 비공개 어드민으로 push할 수 있다. **`.claude/dashboard.json`(gitignored)을 직접 만들 때만** 활성화 — 없으면 아무것도 안 나감(토이 프로젝트 기본). 이중 안전장치: 프로젝트 옵트인 + 서버 등록. 프로토콜 §11, 현황 필드 §8.
 - 프로토콜 전체: `docs/orchestration.md`.
 
 ## 핵심 원칙
