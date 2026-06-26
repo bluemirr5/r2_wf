@@ -111,7 +111,7 @@
 
 <header class="hero">
   <h1>r2_wf — Claude Lab 에이전트 워크플로우</h1>
-  <p>11개의 전문 에이전트가 <strong>플랜 → 스펙 → 구현 → 검증(e2e 포함) → 문서</strong>의 사이클을 굴립니다. 각자 권한 경계가 명확하고, 실패/이슈는 다음 단계로 떠넘기지 않습니다. <strong>모든 호출의 시작·종료에 <code>docs/PROCESS.md</code></strong>를 동기화하여 작업판을 공유합니다. <strong><code>/orchestrate</code></strong>가 전체 파이프라인을 자동 구동하고, 결정에 막히면 <strong>notifier</strong>로 사람에게 escalation합니다.</p>
+  <p>11개의 전문 에이전트가 <strong>플랜 → 스펙 → 구현 → 검증(e2e 포함) → 문서</strong>의 사이클을 굴립니다. 각자 권한 경계가 명확하고, 실패/이슈는 다음 단계로 떠넘기지 않습니다. <strong>모든 호출의 시작·종료에 <code>docs/PROCESS.md</code></strong>를 동기화하여 작업판을 공유합니다. <strong><code>/orchestrate</code></strong>가 전체 파이프라인(모든 사이클)을 자동 구동하고, <strong><code>/step</code></strong>은 사이클 1개(스펙 하나)만 돌린 뒤 멈춥니다. 결정에 막히면 <strong>notifier</strong>로 사람에게 escalation합니다.</p>
   <div class="meta">
     <span class="badge">에이전트 11개</span>
     <span class="badge opus">opus 5</span>
@@ -119,6 +119,7 @@
     <span class="badge haiku">haiku 2</span>
     <span class="badge tool">.claude/agents/*.md</span>
     <span class="badge" style="color:#a78bfa;border-color:#3b2f63">⚙️ /orchestrate</span>
+    <span class="badge" style="color:#a78bfa;border-color:#3b2f63">▶️ /step</span>
     <span class="badge" style="color:#fbbf24;border-color:#5a3f12">📋 docs/PROCESS.md</span>
   </div>
 </header>
@@ -434,7 +435,8 @@
     <tr><td>security-checker</td><td>opus</td><td>PROCESS.md만 (요약만)</td><td>OWASP 심층 보고</td><td>diff + audit + PROCESS.md</td><td>대화창</td></tr>
     <tr><td>doc-writer</td><td>haiku</td><td>md 전체 + <strong>PROCESS.md 정리 owner</strong></td><td>drift 갱신 + 인수인계 + PROCESS.md 정리</td><td>플랜 + 스펙 + 코드 + PROCESS.md</td><td><code>docs/**/*.md</code></td></tr>
     <tr><td>notifier</td><td>haiku</td><td>PROCESS.md·decisions만</td><td>사람 알림 발송 (push/Slack)</td><td>결정 레코드 + PROCESS.md</td><td>PushNotification / webhook</td></tr>
-    <tr><td><strong>orchestrate</strong> (커맨드)</td><td>메인 세션</td><td>전체 (dispatch·게이트·커밋)</td><td>사이클 자동 구동 + escalation</td><td>PROCESS.md + .orch-state.json + decisions</td><td><code>.claude/commands/</code></td></tr>
+    <tr><td><strong>orchestrate</strong> (커맨드)</td><td>메인 세션</td><td>전체 (dispatch·게이트·커밋)</td><td>모든 사이클 자동 구동 + escalation</td><td>PROCESS.md + .orch-state.json + decisions</td><td><code>.claude/commands/</code></td></tr>
+    <tr><td><strong>step</strong> (커맨드)</td><td>메인 세션</td><td>전체 (dispatch·게이트·커밋)</td><td>사이클 1개 완주 후 정지 (planner 제외)</td><td>PROCESS.md + .orch-state.json + decisions</td><td><code>.claude/commands/</code></td></tr>
   </tbody>
 </table>
 </div>
@@ -482,7 +484,7 @@
     <li>N 사이클마다 <strong>doc-writer</strong> → drift 점검 + 인수인계</li>
     <li><strong>DoD 통과 → 커밋·PR</strong>, 다음 사이클을 위해 ②로 복귀</li>
   </ol>
-  <div class="callout"><strong>자동 구동</strong> · 위 순서는 <code>/orchestrate</code>가 자동으로 dispatch합니다. 사람은 escalation된 결정에만 개입 — 섹션 8.</div>
+  <div class="callout"><strong>자동 구동</strong> · 위 순서는 <code>/orchestrate</code>가 자동으로 dispatch합니다. 사람은 escalation된 결정에만 개입 — 섹션 8. <strong>한 사이클(스펙 하나)만 돌리려면</strong> ②~⑪을 한 번 집행하고 멈추는 <code>/step</code>을 쓰세요(①planner는 선행 조건 — 돌리지 않음).</div>
 </div>
 
 <h2 class="section"><span class="num">8</span>⚙️ 오케스트레이션 레이어 (완전 자동화)</h2>
@@ -490,6 +492,7 @@
   <p style="margin:0 0 12px;color:var(--muted)">
     위 11개 에이전트를 <strong>사람 개입 없이 순차 구동</strong>하는 레이어. Claude Code에서 서브에이전트는 다른 서브에이전트를 호출할 수 없으므로, orchestrator는 에이전트가 아니라 <strong>메인 세션이 읽는 커맨드</strong> <code>/orchestrate</code>입니다. 프로토콜 단일 진실원천: <code>docs/orchestration.md</code>.
   </p>
+  <div class="callout"><strong>▶️ 단일 사이클: <code>/step</code></strong> · <code>/orchestrate</code>가 플랜의 <strong>모든 사이클을 소진할 때까지</strong> 루프를 돈다면, <code>/step</code>은 <strong>사이클 1개(스펙 하나)만 완주하고 멈춥니다</strong>(DoD 통과 후 다음 사이클로 전진하지 않음). planner는 돌리지 않으며(플랜 선행 필수), 결정 라우팅·DoD·재검증·서킷브레이커·대시보드 보고는 <code>/orchestrate</code>와 동일하게 <code>orchestration.md</code>를 따릅니다. 다음 스펙은 <code>/step</code> 재실행, 끝까지 한 번에는 <code>/orchestrate</code>.</div>
   <div class="phases">
     <div class="phase">
       <h4>① 결정 라우팅</h4>
@@ -537,7 +540,7 @@
 </div>
 
 <footer>
-  원본: <code>.claude/agents/*.md</code> + <code>.claude/commands/orchestrate.md</code> + <code>docs/orchestration.md</code> + <code>docs/PROCESS.md</code> &middot; 갱신 2026-06-01 &middot; r2_wf v1.2
+  원본: <code>.claude/agents/*.md</code> + <code>.claude/commands/orchestrate.md</code> + <code>.claude/commands/step.md</code> + <code>docs/orchestration.md</code> + <code>docs/PROCESS.md</code> &middot; 갱신 2026-06-26 &middot; r2_wf v1.3
 </footer>
 
 </div>

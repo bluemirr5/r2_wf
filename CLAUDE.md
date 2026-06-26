@@ -23,7 +23,7 @@ r2_wf/
     └── specs/           # 사이클별 스펙
 .claude/
 ├── agents/   # 11개 서브에이전트 (.md)
-└── commands/ # md2html, review-loop, orchestrate
+└── commands/ # md2html, review-loop, orchestrate, step
 ```
 
 ## 에이전트 파이프라인 (한 사이클)
@@ -54,6 +54,10 @@ planner → spec-writer → architect → developer → test-writer → **e2e-te
 - **비동기 사람 응답**: 대기하지 않고 영속화 후 정지, 사람이 답 기록 후 `/orchestrate` 재실행(resume-on-relaunch).
 - **대시보드 보고(옵트인, 기본 비공개)**: 프로젝트 현황(`status`·`current_step`·`phase`·`updated_at`)·산출물을 비공개 어드민으로 push할 수 있다. **`.claude/dashboard.json`(gitignored)을 직접 만들 때만** 활성화 — 없으면 아무것도 안 나감(토이 프로젝트 기본). 이중 안전장치: 프로젝트 옵트인 + 서버 등록. 프로토콜 §11, 현황 필드 §8.
 - 프로토콜 전체: `docs/orchestration.md`.
+
+### 단일 사이클 실행 (`/step`)
+
+`/orchestrate`가 플랜의 **모든 사이클을 소진할 때까지** 루프를 돈다면, `/step`은 **사이클 1개(스펙 하나)만 완주하고 멈춘다**. 마스터 플랜이 있는 상태에서 spec-writer→architect→developer→test-writer→e2e→리뷰→보안→doc→DoD→커밋/PR을 한 번 돌린 뒤 **다음 사이클로 전진하지 않는다**. 다음 스펙은 `/step` 재실행. planner는 돌리지 않으며(플랜 선행 필수), 결정 라우팅·DoD·재검증·서킷브레이커·대시보드 보고는 `/orchestrate`와 동일하게 `docs/orchestration.md`를 따른다. 커맨드: `.claude/commands/step.md`.
 
 ## 핵심 원칙
 

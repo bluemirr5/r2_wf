@@ -13,7 +13,7 @@ curl -fsSL https://raw.githubusercontent.com/bluemirr5/r2_wf/main/install.sh | b
 ## 설치되는 것
 
 - `.claude/agents/` - 커스텀 agents (11개: planner, spec-writer, architect, developer, test-writer, e2e-tester, code-reviewer, security-checker, debugger, doc-writer, notifier)
-- `.claude/commands/` - 커스텀 commands (md2html, review-loop, orchestrate)
+- `.claude/commands/` - 커스텀 commands (md2html, review-loop, orchestrate, step)
 - `.claude/settings.local.json` - 로컬 설정
 - `docs/orchestration.md` - 자동화 프로토콜 (SoT)
 - `docs/decisions/`, `docs/orch-state.example.json` - 오케스트레이션 스토어·상태 스키마
@@ -45,11 +45,12 @@ curl -fsSL https://raw.githubusercontent.com/bluemirr5/r2_wf/<branch>/install.sh
 ├── commands/        # 커스텀 명령어들
 │   ├── md2html.md
 │   ├── orchestrate.md
-│   └── review-loop.md
+│   ├── review-loop.md
+│   └── step.md
 └── settings.local.json
 ```
 
-자동화 프로토콜은 `docs/orchestration.md`를 참조하세요. `/orchestrate`로 전체 파이프라인을 자동 구동합니다.
+자동화 프로토콜은 `docs/orchestration.md`를 참조하세요. `/orchestrate`로 전체 파이프라인(모든 사이클)을 자동 구동하고, `/step`으로 사이클 1개(스펙 하나)만 돌린 뒤 멈춥니다.
 
 ## 사용법
 
