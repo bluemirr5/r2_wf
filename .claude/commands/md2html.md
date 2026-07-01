@@ -94,6 +94,21 @@ description: 마크다운 파일을 개발자 리뷰용 HTML로 변환
 - 인라인 코드: `<code>` (배경색 #f1f5f9)
 - 인용문(`>`): `.callout` 박스로 변환
 
+### 다이어그램 (Mermaid)
+
+- 마크다운의 ` ```mermaid ` 코드 블록은 신택스 강조 대상이 아니라 **다이어그램으로 렌더링**한다.
+  내용을 이스케이프하지 말고 그대로 `<pre class="mermaid">...</pre>`로 출력하고, "필수 사항"의
+  mermaid.js 초기화 스크립트를 포함한다.
+- ASCII/유니코드 박스 드로잉(`┌ ─ │ ▼ ◀ └ ┘ ▶` 등)으로 그린 텍스트 다이어그램은 의미를 해석해
+  **동등한 Mermaid `flowchart`로 변환**한 뒤 위와 동일하게 렌더링한다. 노드 라벨·엣지 라벨·
+  화살표 방향을 보존하고, DB·스토리지성 노드는 원통형(`[( )]`)으로, 폴링·비동기성 엣지는
+  점선(`-.->`)으로 표현한다.
+  - 원문 `.md`는 수정하지 않고 **HTML 출력에서만** 변환하는 것이 기본. 원문 `.md`의 ASCII를
+    `mermaid` 블록으로 함께 치환하려면 사용자가 명시적으로 요청할 때만 수행한다.
+- Mermaid 테마는 문서 CSS 변수와 맞춘다: `theme: "base"` + `themeVariables`
+  (primaryColor=`--primary-soft`, primaryBorderColor=`--primary`, primaryTextColor=`--text`,
+  lineColor=`--muted`, fontFamily=본문 폰트).
+
 ---
 
 ## 출력 경로 규칙
@@ -114,6 +129,11 @@ description: 마크다운 파일을 개발자 리뷰용 HTML로 변환
 - DOCTYPE, meta viewport 포함
 - 반응형 (max-width: 720px에서 컬럼 1개)
 - 푸터: 원본 파일 경로 표시 (`원본: <code>{입력 파일 경로}</code>`)
+- `mermaid` 블록(또는 ASCII→Mermaid로 변환된 다이어그램)이 하나라도 있으면 `</body>` 직전에
+  mermaid.js ESM 모듈을 포함하고 `mermaid.initialize({ startOnLoad: true, securityLevel: "loose",
+  theme: "base", themeVariables: {...} })`를 호출한다.
+  CDN: `https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs`.
+  (폐쇄망/오프라인 리뷰가 필요하면 CDN 대신 로컬에 vendoring.)
 
 ---
 
